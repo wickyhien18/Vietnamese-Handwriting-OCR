@@ -30,10 +30,10 @@ tests/              unit tests
 data/ checkpoints/ outputs/    local only, NEVER committed (ignored by git)
 ```
 
-| Role | You may edit | Do not edit |
-|---|---|---|
-| A (OCR) | `src/ocr/`, `notebooks/ocr_*` | other people's folders |
-| B (corrector) | `src/corrector/`, `notebooks/corrector_*` | other people's folders |
+| Role                 | You may edit                                            | Do not edit            |
+| -------------------- | ------------------------------------------------------- | ---------------------- |
+| A (OCR)              | `src/ocr/`, `notebooks/ocr_*`                           | other people's folders |
+| B (corrector)        | `src/corrector/`, `notebooks/corrector_*`               | other people's folders |
 | C (evaluation, demo) | `src/eval/`, `demo/`, `scripts/`, `contracts/`, `docs/` | other people's folders |
 
 `src/common/` and `contracts/` are shared. Changing them needs agreement from all three people.
@@ -57,7 +57,7 @@ On Windows use `py --version` instead of `python3 --version`.
 
 Pick your distribution.
 
-**Ubuntu, Debian, Linux Mint, Pop!_OS**
+**Ubuntu, Debian, Linux Mint, Pop!\_OS**
 
 ```
 sudo apt update
@@ -187,16 +187,9 @@ source .venv/Scripts/activate
 
 When it works, your prompt starts with `(.venv)`. Every new terminal needs the activation command again.
 
-### 3.2 Install dependencies
-
-```
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
 (Inside the activated environment, `python` is correct on every operating system.)
 
-### 3.3 Run the tests
+### 3.2 Run the tests
 
 ```
 python -m unittest discover -s tests -t . -v
@@ -204,7 +197,7 @@ python -m unittest discover -s tests -t . -v
 
 Expected result: `Ran 5 tests ... OK`.
 
-### 3.4 Validate the sample data file
+### 3.3 Validate the sample data file
 
 ```
 python scripts/validate_ocr_out.py contracts/examples/ocr_out.sample.jsonl
@@ -216,33 +209,16 @@ Expected result: `OK`.
 
 ## 4. Git and GitHub workflow
 
-### 4.1 One person, once: publish the repository
-
-1. On github.com create a new **private** repository (empty: do not add a README, `.gitignore` or license).
-2. Unzip the project, open a terminal in the folder, then:
+### 4.1 Everyone else: get the code
 
 ```
-git init -b main
-git add .
-git commit -m "Initial project skeleton"
-git remote add origin https://github.com/<OWNER>/<REPO>.git
-git push -u origin main
-```
-
-3. In the repository settings on GitHub, add the other two people as collaborators.
-
-If `git push` asks for a password, GitHub does not accept account passwords. Use GitHub CLI (`gh auth login`, install from https://cli.github.com) or a personal access token, or set up an SSH key.
-
-### 4.2 Everyone else: get the code
-
-```
-git clone https://github.com/<OWNER>/<REPO>.git
-cd <REPO>
+git clone https://github.com/wickyhien18/Vietnamese-Handwriting-OCR
+cd Vietnamese-Handwriting-OCR
 ```
 
 Then follow section 3.
 
-### 4.3 Daily rules
+### 4.2 Daily rules
 
 - Each person works on their own branch: `a/ocr`, `b/corrector`, `c/eval`.
 
@@ -295,13 +271,13 @@ Role A writes `ocr_out.jsonl` into `outputs/`. Role C reads it from there.
 
 The notebook `notebooks/00_setup_drive.ipynb` creates the structure above in My Drive and checks read/write access. The owner runs it once, then shares the `ml-project` folder with the others as Editor.
 
-A folder shared with you shows up under *Shared with me*, not under *My Drive*. In the Drive web page right click it, choose *Organize*, then *Add shortcut*, and put the shortcut in *My Drive*. Then the path `/content/drive/MyDrive/ml-project` works for you as well. Folder shortcuts normally work in Colab, but this has not been verified for this project. If the path does not exist, find the real one in the Colab file browser and change `DRIVE_ROOT` and the other path variables.
+A folder shared with you shows up under _Shared with me_, not under _My Drive_. In the Drive web page right click it, choose _Organize_, then _Add shortcut_, and put the shortcut in _My Drive_. Then the path `/content/drive/MyDrive/ml-project` works for you as well. Folder shortcuts normally work in Colab, but this has not been verified for this project. If the path does not exist, find the real one in the Colab file browser and change `DRIVE_ROOT` and the other path variables.
 
 ### First cell of every Colab notebook
 
 The repository is private, so Colab needs a token to clone it:
 
-1. On GitHub create a **fine-grained personal access token** with read-only access to *Contents* for this one repository.
+1. On GitHub create a **fine-grained personal access token** with read-only access to _Contents_ for this one repository.
 2. In Colab open the key icon (**Secrets**), add a secret named `GITHUB_TOKEN`, and switch on notebook access.
 3. Never paste the token into a notebook cell and never commit it.
 
@@ -326,16 +302,16 @@ Colab runtimes reset, so the clone disappears when the session ends. Commit and 
 
 ## 7. Troubleshooting
 
-| Problem | Fix |
-|---|---|
-| `python3: command not found` (Linux/macOS) | Python is not installed, see section 2. |
-| `'python' is not recognized` (Windows) | Use `py` instead, or reinstall Python with "Add python.exe to PATH" ticked. |
-| `error: externally-managed-environment` | You ran `pip` outside the virtual environment. Activate `.venv` first (section 3.1). |
-| `The virtual environment was not created successfully ... ensurepip` (Ubuntu/Debian) | `sudo apt install python3-venv`, delete the `.venv` folder and create it again. |
-| Same error on Arch-based systems | `sudo pacman -S python-pip`, delete `.venv` and create it again. |
-| PowerShell: "running scripts is disabled" | `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`, then activate again. |
-| `source: ... activate: No such file` on fish | Use `source .venv/bin/activate.fish`. |
-| `ModuleNotFoundError: No module named 'src'` | Run commands from the repository root, not from a subfolder. |
-| `git push` rejected, asks for a password | Use `gh auth login`, a personal access token, or SSH (section 4.1). |
-| Vietnamese letters look garbled in the terminal | Use Windows Terminal, or any UTF-8 terminal on Linux/macOS. |
-| Validator says a field is "not NFC-normalized" | Run the text through `normalize_nfc` before writing the file. |
+| Problem                                                                              | Fix                                                                                          |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `python3: command not found` (Linux/macOS)                                           | Python is not installed, see section 2.                                                      |
+| `'python' is not recognized` (Windows)                                               | Use `py` instead, or reinstall Python with "Add python.exe to PATH" ticked.                  |
+| `error: externally-managed-environment`                                              | You ran `pip` outside the virtual environment. Activate `.venv` first (section 3.1).         |
+| `The virtual environment was not created successfully ... ensurepip` (Ubuntu/Debian) | `sudo apt install python3-venv`, delete the `.venv` folder and create it again.              |
+| Same error on Arch-based systems                                                     | `sudo pacman -S python-pip`, delete `.venv` and create it again.                             |
+| PowerShell: "running scripts is disabled"                                            | `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`, then activate again. |
+| `source: ... activate: No such file` on fish                                         | Use `source .venv/bin/activate.fish`.                                                        |
+| `ModuleNotFoundError: No module named 'src'`                                         | Run commands from the repository root, not from a subfolder.                                 |
+| `git push` rejected, asks for a password                                             | Use `gh auth login`, a personal access token, or SSH (section 4.1).                          |
+| Vietnamese letters look garbled in the terminal                                      | Use Windows Terminal, or any UTF-8 terminal on Linux/macOS.                                  |
+| Validator says a field is "not NFC-normalized"                                       | Run the text through `normalize_nfc` before writing the file.                                |
