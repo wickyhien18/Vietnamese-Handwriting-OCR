@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ocr_out record (one JSON object per line)",
+  "type": "object",
+  "required": ["id", "split", "image_path", "gt_text", "ocr_text"],
+  "properties": {
+    "id": {"type": "string"},
+    "split": {"enum": ["train", "val", "test"]},
+    "image_path": {"type": "string"},
+    "gt_text": {"type": "string"},
+    "ocr_text": {"type": "string"},
+    "ocr_conf": {"type": "array", "items": {"type": "number"}}
+  },
+  "additionalProperties": false
+}

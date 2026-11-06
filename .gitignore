@@ -1,0 +1,14 @@
+data/
+checkpoints/
+outputs/
+*.pt
+*.pth
+*.ckpt
+*.npy
+*.zip
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+.env
+.DS_Store
