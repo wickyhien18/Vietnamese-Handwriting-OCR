@@ -15,7 +15,7 @@ See also: [`docs/ASSIGNMENTS.md`](docs/ASSIGNMENTS.md) (who does what and when) 
 
 ## Start here: full setup, in order
 
-Do the steps in order, from Step 0 to Step 9. Every step ends with **"You should see"**, so you know it worked before you move on. If a step fails, look at the troubleshooting table at the end, then send the exact error text to the group.
+Do the steps in order, from Step 0 to Step 7. Every step ends with **"You should see"**, so you know it worked before you move on. If a step fails, look at the troubleshooting table at the end, then send the exact error text to the group.
 
 > **Before you start, the maintainer (Hiển) must have done three things:**
 > 1. Invited you as a collaborator on the GitHub repository.
@@ -144,7 +144,7 @@ Windows PowerShell:
 powershell -ExecutionPolicy Bypass -File scripts\setup_local.ps1
 ```
 
-You should see: `Ran 5 tests ... OK`, then `OK`, and finally `Setup finished`.
+You should see: `Ran <N> tests ... OK` (every test passes; N grows as the project grows), then `OK`, and finally `Setup finished`.
 
 The Linux/macOS script was tested on Linux. The Windows script has not been run on a real Windows machine yet, so report any error to the group.
 
@@ -178,7 +178,7 @@ python -m unittest discover -s tests -t . -v
 python scripts/validate_ocr_out.py contracts/examples/ocr_out.sample.jsonl
 ```
 
-Expected: `Ran 5 tests ... OK`, then `OK`.
+Expected: `Ran <N> tests ... OK` (no failures), then `OK`.
 
 </details>
 
@@ -202,48 +202,28 @@ You should see: your branch name on the GitHub repository page (branch dropdown)
 1. In Google Drive, go to **Shared with me**.
 2. Right click `Vietnamese-Handwriting-OCR`, choose **Organize**, then **Add shortcut**, and pick **My Drive**.
 
-A folder shared with you shows up under _Shared with me_, not under _My Drive_. Colab only finds it at `/content/drive/MyDrive/Vietnamese-Handwriting-OCR` after you add the shortcut. Folder shortcuts normally work in Colab, but this has not been verified for this project. If Step 8 fails on the folder, tell the group.
+A folder shared with you shows up under _Shared with me_, not under _My Drive_. Colab only finds it at `/content/drive/MyDrive/Vietnamese-Handwriting-OCR` after you add the shortcut. Folder shortcuts normally work in Colab, but this has not been verified for this project. If Step 7 fails on the folder, tell the group.
 
 You should see: `Vietnamese-Handwriting-OCR` inside **My Drive**, with `data`, `checkpoints` and `outputs` inside it.
 
-### Step 7. Save the GitHub token in Colab
+### Step 7. Run the check notebook from Drive in Colab
 
-The repository is private, so Colab needs the token from Hiển to download the code.
+The check notebook `00_setup_drive.ipynb` is already in the shared Drive folder. It uses the token from Hiển to reach the private repository.
 
-1. Open https://colab.research.google.com and open any notebook (a new one is fine).
-2. Click the **key icon (Secrets)** in the left sidebar, then **Add new secret**.
-3. Name: `GITHUB_TOKEN`. Value: the token from Hiển. Switch on **Notebook access**.
+1. In Google Drive open the folder `Vietnamese-Handwriting-OCR` (under **Shared with me**, or through the shortcut from Step 6). Right click `00_setup_drive.ipynb`, choose **Open with**, then **Google Colaboratory**. If Colab is not in the list, choose **Connect more apps**, search for "Colaboratory" and install it first.
+2. In Colab click the **key icon (Secrets)** in the left sidebar, then **Add new secret**. Name: `GITHUB_TOKEN`. Value: the token from Hiển. Switch on **Notebook access** for this notebook. The list of secrets is shared by all your notebooks, but access is granted notebook by notebook.
+3. Choose **Runtime**, then **Run all**. Allow Drive access when the pop-up appears.
 
-Never paste the token into a notebook cell and never commit it. The token is read-only, so Colab can download the code but cannot change it. You push code from your laptop (Step 5 and the daily workflow below).
+Do not edit this notebook, it is shared with the whole group. Never paste the token into a cell and never commit it. The token is read-only, so Colab can download the code but cannot change it. You push code from your laptop (Step 5 and the daily workflow below).
 
-You should see: a secret named `GITHUB_TOKEN` with the notebook access switch on.
-
-### Step 8. Run the check notebook in Colab
-
-1. In Colab choose **File**, then **Upload notebook**, and select `notebooks/00_setup_drive.ipynb` from the folder you cloned in Step 3.
-2. Choose **Runtime**, then **Run all**. Allow Drive access when the pop-up appears.
-
-You should see all three of these:
+You should see these two lines, and a folder tree that lists `data`, `checkpoints` and `outputs`:
 
 ```
 Drive folder is readable and writable.
 GitHub access OK
 ```
 
-and a folder tree that lists `data`, `checkpoints` and `outputs`. If the first cell says the folder was not found, go back to Step 6.
-
-### Step 9. Report to the group
-
-Send this message, filled in:
-
-```
-Setup done.
-OS: <Linux distro / macOS / Windows>
-Tests: 5 passed
-Drive: read/write OK
-GitHub in Colab: OK
-My branch: <branch name>
-```
+If the first cell says the folder was not found, go back to Step 6. If the last cell fails, see the Colab rows of the troubleshooting table.
 
 You are ready. From here on, use the daily workflow below.
 
@@ -298,7 +278,7 @@ CKPT_DIR = f"{DRIVE_ROOT}/checkpoints"
 OUT_DIR = f"{DRIVE_ROOT}/outputs"
 ```
 
-The clone lives in the Colab machine and disappears when the session ends. Colab only **reads** code (the token is read-only). Push code from your laptop, and save results (checkpoints, `ocr_out.jsonl`) to Drive. The token is stored inside the clone's git settings, so never share that folder and never print `git remote -v` in a notebook you share.
+For every new notebook that uses `GITHUB_TOKEN`, open **Secrets** and switch on **Notebook access** again: the secret is shared by all your notebooks, but access is granted notebook by notebook. The clone lives in the Colab machine and disappears when the session ends. Colab only **reads** code (the token is read-only). Push code from your laptop, and save results (checkpoints, `ocr_out.jsonl`) to Drive. The token is stored inside the clone's git settings, so never share that folder and never print `git remote -v` in a notebook you share.
 
 ---
 
@@ -306,7 +286,7 @@ The clone lives in the Colab machine and disappears when the session ends. Colab
 
 ```
 contracts/          data contracts shared by everyone (schema + sample file)
-scripts/            validators and the local setup scripts (setup_local.sh, setup_local.ps1)
+scripts/            validators, dataset tools (inspect_dataset.py, make_splits.py) and the local setup scripts
 docs/               assignments and setup checklist
 src/common/         shared utilities (Unicode normalization, diacritic stripping)
 src/ocr/            role A: OCR model
@@ -372,7 +352,8 @@ python scripts/validate_ocr_out.py path/to/ocr_out.jsonl
 | `source: ... activate: No such file` on fish | Use `source .venv/bin/activate.fish`. |
 | `ModuleNotFoundError: No module named 'src'` | Run commands from the repository root, not from a subfolder. |
 | Colab check says the Drive folder was not found | Add the shortcut to My Drive (Step 6), then run the notebook again. |
-| Colab: `SecretNotFoundError` | Create the `GITHUB_TOKEN` secret and switch on notebook access (Step 7). |
+| Colab: `SecretNotFoundError` | The secret does not exist. Add a secret named exactly `GITHUB_TOKEN` (Step 7). |
+| Colab: `NotebookAccessError` | Switch on **Notebook access** for `GITHUB_TOKEN` in this notebook (Step 7). |
 | Colab: "GitHub access FAILED" | The secret name is not exactly `GITHUB_TOKEN`, notebook access is off, the token was copied incompletely, or it expired. Ask Hiển for a new one. |
 | Vietnamese letters look garbled in the terminal | Use Windows Terminal, or any UTF-8 terminal on Linux/macOS. |
 | Validator says a field is "not NFC-normalized" | Run the text through `normalize_nfc` before writing the file. |
