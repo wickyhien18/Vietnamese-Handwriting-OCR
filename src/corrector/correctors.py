@@ -13,9 +13,13 @@ from src.corrector.viterbi import local_confidence, viterbi
 
 
 def restore_case(original, word):
-    """Copy the capitalization of the input: ('HA', 'hà') -> 'HÀ', ('Ha', 'hà') -> 'Hà'."""
-    if len(original) > 1 and original.isupper():
-        return word.upper()
+    """Copy the capitalization of the input letter by letter:
+    ('HA', 'hà') -> 'HÀ', ('Ha', 'hà') -> 'Hà', ('iPhone', 'iphone') -> 'iPhone'.
+
+    Changing diacritics never changes the number of letters, so the two words line up.
+    """
+    if len(original) == len(word):
+        return "".join(w.upper() if o.isupper() else w for o, w in zip(original, word))
     if original[:1].isupper():
         return word[:1].upper() + word[1:]
     return word

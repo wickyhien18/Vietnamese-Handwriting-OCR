@@ -81,6 +81,10 @@ class ViterbiTest(unittest.TestCase):
             self.assertTrue(all(0.0 <= c <= 1.0 for c in out["conf"]))
             self.assertTrue(out["text"].startswith('"B'))  # quotes and capitals kept
 
+    def test_identity_keeps_mixed_case(self):
+        text = "iPhone của McDonald ở TP.HCM"
+        self.assertEqual(IdentityCorrector().correct(text)["text"], text)
+
     def test_estimate_p_same(self):
         self.assertEqual(estimate_p_same([("a b c d", "a b x d")]), 0.75)
 
