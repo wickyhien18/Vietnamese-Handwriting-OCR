@@ -225,7 +225,40 @@ GitHub access OK
 
 If the first cell says the folder was not found, go back to Step 6. If the last cell fails, see the Colab rows of the troubleshooting table.
 
-You are ready. From here on, use the daily workflow below.
+You are ready. Now read **After setup: your first session** below.
+
+---
+
+## After setup: your first session
+
+The shared data is prepared once by the maintainer (see "Maintainer only: prepare the data" below). When it is ready, this is already on Drive:
+
+```
+data/uit_hwdb/<archive>.zip          the UIT-HWDB-line images and labels
+data/corpus/viwiki_sentences.txt     Vietnamese sentences for role B
+outputs/dataset_index.jsonl          one record per labeled image: id, image_path, gt_text
+outputs/splits.json                  id -> train / val / test (the same for everybody)
+outputs/dataset_report.txt           what the dataset folder looks like
+```
+
+`image_path` is always relative to the folder where the zip is extracted: **`/content/uit_hwdb`** on Colab. The start notebooks below extract it there for you.
+
+| Role | Person | Start notebook (in `notebooks/` of your clone) |
+| ---- | ------ | ---------------------------------------------- |
+| A (OCR) | Dương | `ocr_00_start.ipynb` |
+| B (corrector) | Khánh | `corrector_00_start.ipynb` |
+| C (evaluation) | Hiển | `00_prepare_data.ipynb` first, then your own notebooks |
+
+How to use a start notebook:
+
+1. `git pull` on your laptop so the notebook is in your clone.
+2. In Colab choose **File**, then **Upload notebook**, and select it.
+3. Click the **key icon (Secrets)**, switch on **Notebook access** for `GITHUB_TOKEN` in this notebook, and for role A switch on a GPU (**Runtime**, **Change runtime type**).
+4. **Runtime**, then **Run all**. The notebook ends with a short list of what to do next.
+
+Colab cannot push to GitHub (the token is read-only). To keep your own notebook, choose **File**, **Download .ipynb**, put the file into `notebooks/` of your clone and push from your laptop. To test code that you pushed to your branch, set `BRANCH` in the first cell to your branch name.
+
+Two rules for training on Colab: save a checkpoint to Drive (`checkpoints/`) after **every epoch**, because sessions get cut, and copy the images to the Colab disk instead of reading them from Drive.
 
 ---
 
@@ -240,6 +273,21 @@ Teammates cannot create their own token for this repository. GitHub documents th
 5. Repository permissions: **Contents: Read-only**. Leave everything else on "No access" (Metadata read-only is added automatically).
 6. **Generate token** and copy it right away: GitHub shows it only once.
 7. Send it to Dương and Khánh in a **private message** each. If it ever leaks, delete it in the same settings page and create a new one.
+
+---
+
+## Maintainer only: prepare the data (once)
+
+Hiển runs `notebooks/00_prepare_data.ipynb` in Colab (upload it like a start notebook, switch on notebook access for `GITHUB_TOKEN`, **Run all**). It does these things in order:
+
+1. Downloads UIT-HWDB-line from the Google Drive link in the dataset README into `data/uit_hwdb/`. If Google blocks the download, make a copy by hand from the link in the README and put the file into that folder.
+2. Prints the layout of the dataset and saves it as `outputs/dataset_report.txt`.
+3. Extracts the images on the Colab disk, then builds `outputs/dataset_index.jsonl` (`scripts/build_index.py`) and `outputs/splits.json` (`scripts/make_splits.py`).
+4. Builds the sentence corpus for role B from Vietnamese Wikipedia (`scripts/prepare_corpus.py`, dataset `wikimedia/wikipedia`, config `20231101.vi`, text under CC BY-SA 3.0 and GFDL according to the dataset card).
+
+`build_index.py` guesses the label format (JSON, CSV/TSV/TXT lines, or one text file per image). It was tested only on made-up layouts. If it stops with an error, send the printed output and `dataset_report.txt` to the group so the script can be adjusted to the real layout.
+
+Then tell Dương and Khánh that the data is ready.
 
 ---
 
@@ -258,6 +306,7 @@ git push                         # first push of a new branch: git push -u origi
 - Never commit data, model weights or secrets. They are already blocked by `.gitignore`: keep it that way.
 - All code, comments and identifiers are written in English.
 - Changes to `contracts/` or `src/common/` need all three people to agree.
+- Notebooks are edited in Colab, then downloaded and committed from your laptop (Colab has only read access).
 
 ### First cell of every Colab notebook
 
@@ -266,11 +315,17 @@ from google.colab import drive, userdata
 
 drive.mount("/content/drive")
 
+BRANCH = "main"  # use your own branch (a/ocr, b/corrector, c/eval) to test code you have pushed
+
 token = userdata.get("GITHUB_TOKEN")
 !rm -rf /content/repo
-!git clone https://{token}@github.com/wickyhien18/Vietnamese-Handwriting-OCR.git /content/repo
+!git clone -q https://{token}@github.com/wickyhien18/Vietnamese-Handwriting-OCR.git /content/repo
+!git -C /content/repo checkout -q {BRANCH}
 %cd /content/repo
 !pip install -q -r requirements.txt
+
+import sys
+sys.path.insert(0, "/content/repo")
 
 DRIVE_ROOT = "/content/drive/MyDrive/Vietnamese-Handwriting-OCR"
 DATA_DIR = f"{DRIVE_ROOT}/data"
@@ -286,15 +341,17 @@ For every new notebook that uses `GITHUB_TOKEN`, open **Secrets** and switch on 
 
 ```
 contracts/          data contracts shared by everyone (schema + sample file)
-scripts/            validators, dataset tools (inspect_dataset.py, make_splits.py) and the local setup scripts
+scripts/            validators, dataset tools (inspect_dataset.py, build_index.py, make_splits.py, prepare_corpus.py)
+                    and the local setup scripts
 docs/               assignments and setup checklist
-src/common/         shared utilities (Unicode normalization, diacritic stripping)
+src/common/         shared utilities (Unicode normalization, diacritic stripping, index reading)
 src/ocr/            role A: OCR model
 src/corrector/      role B: diacritic correction model
 src/eval/           role C: evaluation code
 src/stubs/          fake components so nobody has to wait for anybody
 demo/               role C: demo app
-notebooks/          Colab notebooks (prefix them: ocr_*, corrector_*, eval_*)
+notebooks/          Colab notebooks: 00_setup_drive, 00_prepare_data, ocr_00_start, corrector_00_start;
+                    your own notebooks use the prefixes ocr_*, corrector_*, eval_*
 tests/              unit tests
 data/ checkpoints/ outputs/    local only, NEVER committed (ignored by git)
 ```
@@ -320,11 +377,11 @@ Vietnamese-Handwriting-OCR/
   outputs/
 ```
 
-Role A writes `ocr_out.jsonl` into `outputs/`. Role C reads it from there.
+Role A writes `ocr_out.jsonl` into `outputs/`. Role C reads it from there. `outputs/` also holds `dataset_index.jsonl`, `splits.json` and `dataset_report.txt`; `data/corpus/` holds `viwiki_sentences.txt`.
 
 ## The two data contracts (frozen after 8 Nov)
 
-1. **`ocr_out.jsonl`**: one JSON object per line with the fields `id`, `split` (`train`, `val` or `test`), `image_path`, `gt_text`, `ocr_text`, and optionally `ocr_conf`. Full definition in `contracts/ocr_out.schema.json`. Check any file with:
+1. **`ocr_out.jsonl`**: one JSON object per line with the fields `id`, `split` (`train`, `val` or `test`), `image_path` (relative to `/content/uit_hwdb`, copied from `dataset_index.jsonl`), `gt_text`, `ocr_text`, and optionally `ocr_conf`. Full definition in `contracts/ocr_out.schema.json`. Check any file with:
 
 ```
 python scripts/validate_ocr_out.py path/to/ocr_out.jsonl
@@ -351,6 +408,8 @@ python scripts/validate_ocr_out.py path/to/ocr_out.jsonl
 | PowerShell: "running scripts is disabled" | `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`, then activate again. |
 | `source: ... activate: No such file` on fish | Use `source .venv/bin/activate.fish`. |
 | `ModuleNotFoundError: No module named 'src'` | Run commands from the repository root, not from a subfolder. |
+| `00_prepare_data`: the download cell fails | Google sometimes blocks large downloads. Open the link from the dataset README, make a copy or download it, put the file into `data/uit_hwdb/` by hand, then run the next cells. |
+| `build_index.py`: "only N of M images got a label" | The script could not read the label format. Send its full output and `outputs/dataset_report.txt` to the group so the script can be adjusted. |
 | Colab check says the Drive folder was not found | Add the shortcut to My Drive (Step 6), then run the notebook again. |
 | Colab: `SecretNotFoundError` | The secret does not exist. Add a secret named exactly `GITHUB_TOKEN` (Step 7). |
 | Colab: `NotebookAccessError` | Switch on **Notebook access** for `GITHUB_TOKEN` in this notebook (Step 7). |
