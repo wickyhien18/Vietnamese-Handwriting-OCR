@@ -204,19 +204,19 @@ You should see: your branch name on the GitHub repository page (branch dropdown)
 
 A folder shared with you shows up under _Shared with me_, not under _My Drive_. Colab only finds it at `/content/drive/MyDrive/Vietnamese-Handwriting-OCR` after you add the shortcut. Folder shortcuts normally work in Colab, but this has not been verified for this project. If Step 7 fails on the folder, tell the group.
 
-You should see: `Vietnamese-Handwriting-OCR` inside **My Drive**, with `data`, `checkpoints` and `outputs` inside it.
+You should see: `Vietnamese-Handwriting-OCR` inside **My Drive**, with `notebooks`, `data`, `checkpoints` and `outputs` inside it.
 
 ### Step 7. Run the check notebook from Drive in Colab
 
-The check notebook `00_setup_drive.ipynb` is already in the shared Drive folder. It uses the token from Hiển to reach the private repository.
+The check notebook `00_setup_drive.ipynb` is in the `notebooks` folder of the shared Drive folder. It uses the token from Hiển to reach the private repository.
 
-1. In Google Drive open the folder `Vietnamese-Handwriting-OCR` (under **Shared with me**, or through the shortcut from Step 6). Right click `00_setup_drive.ipynb`, choose **Open with**, then **Google Colaboratory**. If Colab is not in the list, choose **Connect more apps**, search for "Colaboratory" and install it first.
+1. In Google Drive open the folder `Vietnamese-Handwriting-OCR`, then its `notebooks` folder (under **Shared with me**, or through the shortcut from Step 6). Right click `00_setup_drive.ipynb`, choose **Open with**, then **Google Colaboratory**. If Colab is not in the list, choose **Connect more apps**, search for "Colaboratory" and install it first.
 2. In Colab click the **key icon (Secrets)** in the left sidebar, then **Add new secret**. Name: `GITHUB_TOKEN`. Value: the token from Hiển. Switch on **Notebook access** for this notebook. The list of secrets is shared by all your notebooks, but access is granted notebook by notebook.
 3. Choose **Runtime**, then **Run all**. Allow Drive access when the pop-up appears.
 
 Do not edit this notebook, it is shared with the whole group. Never paste the token into a cell and never commit it. The token is read-only, so Colab can download the code but cannot change it. You push code from your laptop (Step 5 and the daily workflow below).
 
-You should see these two lines, and a folder tree that lists `data`, `checkpoints` and `outputs`:
+You should see these two lines, and a folder tree that lists `notebooks`, `data`, `checkpoints` and `outputs`:
 
 ```
 Drive folder is readable and writable.
@@ -243,20 +243,22 @@ outputs/dataset_report.txt           what the dataset folder looks like
 
 `image_path` is always relative to the folder where the zip is extracted: **`/content/uit_hwdb`** on Colab. The start notebooks below extract it there for you.
 
-| Role | Person | Start notebook (in `notebooks/` of your clone) |
-| ---- | ------ | ---------------------------------------------- |
+| Role | Person | Start notebook (Drive: `notebooks/`) |
+| ---- | ------ | ------------------------------------ |
 | A (OCR) | Dương | `ocr_00_start.ipynb` |
 | B (corrector) | Khánh | `corrector_00_start.ipynb` |
 | C (evaluation) | Hiển | `00_prepare_data.ipynb` first, then your own notebooks |
 
 How to use a start notebook:
 
-1. `git pull` on your laptop so the notebook is in your clone.
-2. In Colab choose **File**, then **Upload notebook**, and select it.
-3. Click the **key icon (Secrets)**, switch on **Notebook access** for `GITHUB_TOKEN` in this notebook, and for role A switch on a GPU (**Runtime**, **Change runtime type**).
+1. In Google Drive open `Vietnamese-Handwriting-OCR/notebooks/`, right click your start notebook, choose **Open with**, then **Google Colaboratory**.
+2. In Colab choose **File**, then **Save a copy in Drive**, and work in the copy. The notebook in the shared folder must stay clean for everybody.
+3. In the copy, click the **key icon (Secrets)** and switch on **Notebook access** for `GITHUB_TOKEN`. Role A also switches on a GPU (**Runtime**, **Change runtime type**).
 4. **Runtime**, then **Run all**. The notebook ends with a short list of what to do next.
 
-Colab cannot push to GitHub (the token is read-only). To keep your own notebook, choose **File**, **Download .ipynb**, put the file into `notebooks/` of your clone and push from your laptop. To test code that you pushed to your branch, set `BRANCH` in the first cell to your branch name.
+The start notebooks in Drive are copies of the originals in the repo (`notebooks/`). When a notebook changes in the repo, the maintainer uploads the new version over the old one in Drive.
+
+Colab cannot push to GitHub (the token is read-only). To keep your own notebook in git, choose **File**, **Download .ipynb**, put the file into `notebooks/` of your clone and push from your laptop. To test code that you pushed to your branch, set `BRANCH` in the first cell to your branch name.
 
 Two rules for training on Colab: save a checkpoint to Drive (`checkpoints/`) after **every epoch**, because sessions get cut, and copy the images to the Colab disk instead of reading them from Drive.
 
@@ -278,7 +280,7 @@ Teammates cannot create their own token for this repository. GitHub documents th
 
 ## Maintainer only: prepare the data (once)
 
-Hiển runs `notebooks/00_prepare_data.ipynb` in Colab (upload it like a start notebook, switch on notebook access for `GITHUB_TOKEN`, **Run all**). It does these things in order:
+Before the first run, upload the four notebooks (`00_setup_drive`, `00_prepare_data`, `ocr_00_start`, `corrector_00_start`) from `notebooks/` of your clone into `notebooks/` of the shared Drive folder. Then open `00_prepare_data.ipynb` from Drive with **Open with**, **Google Colaboratory**, switch on notebook access for `GITHUB_TOKEN`, and **Run all**. It does these things in order:
 
 1. Downloads UIT-HWDB-line from the Google Drive link in the dataset README into `data/uit_hwdb/`. If Google blocks the download, make a copy by hand from the link in the README and put the file into that folder.
 2. Prints the layout of the dataset and saves it as `outputs/dataset_report.txt`.
@@ -350,7 +352,8 @@ src/corrector/      role B: diacritic correction model
 src/eval/           role C: evaluation code
 src/stubs/          fake components so nobody has to wait for anybody
 demo/               role C: demo app
-notebooks/          Colab notebooks: 00_setup_drive, 00_prepare_data, ocr_00_start, corrector_00_start;
+notebooks/          Colab notebooks (originals; copies live in Drive notebooks/):
+                    00_setup_drive, 00_prepare_data, ocr_00_start, corrector_00_start;
                     your own notebooks use the prefixes ocr_*, corrector_*, eval_*
 tests/              unit tests
 data/ checkpoints/ outputs/    local only, NEVER committed (ignored by git)
@@ -370,6 +373,7 @@ Git holds code. **Google Drive holds everything big**: datasets, model checkpoin
 
 ```
 Vietnamese-Handwriting-OCR/
+  notebooks/          copies of the start notebooks, opened with Colab
   data/uit_hwdb/
   data/corpus/
   checkpoints/ocr/
