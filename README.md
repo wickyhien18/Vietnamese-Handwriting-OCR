@@ -204,19 +204,19 @@ You should see: your branch name on the GitHub repository page (branch dropdown)
 
 A folder shared with you shows up under _Shared with me_, not under _My Drive_. Colab only finds it at `/content/drive/MyDrive/Vietnamese-Handwriting-OCR` after you add the shortcut. Folder shortcuts normally work in Colab, but this has not been verified for this project. If Step 7 fails on the folder, tell the group.
 
-You should see: `Vietnamese-Handwriting-OCR` inside **My Drive**, with `data`, `checkpoints` and `outputs` inside it.
+You should see: `Vietnamese-Handwriting-OCR` inside **My Drive**, with `notebooks`, `data`, `checkpoints` and `outputs` inside it.
 
 ### Step 7. Run the check notebook from Drive in Colab
 
-The check notebook `00_setup_drive.ipynb` is already in the shared Drive folder. It uses the token from Hiển to reach the private repository.
+The check notebook `00_setup_drive.ipynb` is in the `notebooks` folder of the shared Drive folder. It uses the token from Hiển to reach the private repository.
 
-1. In Google Drive open the folder `Vietnamese-Handwriting-OCR` (under **Shared with me**, or through the shortcut from Step 6). Right click `00_setup_drive.ipynb`, choose **Open with**, then **Google Colaboratory**. If Colab is not in the list, choose **Connect more apps**, search for "Colaboratory" and install it first.
+1. In Google Drive open the folder `Vietnamese-Handwriting-OCR`, then its `notebooks` folder (under **Shared with me**, or through the shortcut from Step 6). Right click `00_setup_drive.ipynb`, choose **Open with**, then **Google Colaboratory**. If Colab is not in the list, choose **Connect more apps**, search for "Colaboratory" and install it first.
 2. In Colab click the **key icon (Secrets)** in the left sidebar, then **Add new secret**. Name: `GITHUB_TOKEN`. Value: the token from Hiển. Switch on **Notebook access** for this notebook. The list of secrets is shared by all your notebooks, but access is granted notebook by notebook.
 3. Choose **Runtime**, then **Run all**. Allow Drive access when the pop-up appears.
 
 Do not edit this notebook, it is shared with the whole group. Never paste the token into a cell and never commit it. The token is read-only, so Colab can download the code but cannot change it. You push code from your laptop (Step 5 and the daily workflow below).
 
-You should see these two lines, and a folder tree that lists `data`, `checkpoints` and `outputs`:
+You should see these two lines, and a folder tree that lists `notebooks`, `data`, `checkpoints` and `outputs`:
 
 ```
 Drive folder is readable and writable.
@@ -243,20 +243,22 @@ outputs/dataset_report.txt           what the dataset folder looks like
 
 `image_path` is always relative to the folder where the zip is extracted: **`/content/uit_hwdb`** on Colab. The start notebooks below extract it there for you.
 
-| Role | Person | Start notebook (in `notebooks/` of your clone) |
-| ---- | ------ | ---------------------------------------------- |
+| Role | Person | Start notebook (Drive: `notebooks/`) |
+| ---- | ------ | ------------------------------------ |
 | A (OCR) | Dương | `ocr_00_start.ipynb` |
 | B (corrector) | Khánh | `corrector_00_start.ipynb` |
 | C (evaluation) | Hiển | `00_prepare_data.ipynb` first, then your own notebooks |
 
 How to use a start notebook:
 
-1. `git pull` on your laptop so the notebook is in your clone.
-2. In Colab choose **File**, then **Upload notebook**, and select it.
-3. Click the **key icon (Secrets)**, switch on **Notebook access** for `GITHUB_TOKEN` in this notebook, and for role A switch on a GPU (**Runtime**, **Change runtime type**).
+1. In Google Drive open `Vietnamese-Handwriting-OCR/notebooks/`, right click your start notebook, choose **Open with**, then **Google Colaboratory**.
+2. In Colab choose **File**, then **Save a copy in Drive**, and work in the copy. The notebook in the shared folder must stay clean for everybody.
+3. In the copy, click the **key icon (Secrets)** and switch on **Notebook access** for `GITHUB_TOKEN`. Role A also switches on a GPU (**Runtime**, **Change runtime type**).
 4. **Runtime**, then **Run all**. The notebook ends with a short list of what to do next.
 
-Colab cannot push to GitHub (the token is read-only). To keep your own notebook, choose **File**, **Download .ipynb**, put the file into `notebooks/` of your clone and push from your laptop. To test code that you pushed to your branch, set `BRANCH` in the first cell to your branch name.
+The start notebooks in Drive are copies of the originals in the repo (`notebooks/`). When a notebook changes in the repo, the maintainer uploads the new version over the old one in Drive.
+
+Colab cannot push to GitHub (the token is read-only). To keep your own notebook in git, choose **File**, **Download .ipynb**, put the file into `notebooks/` of your clone and push from your laptop. To test code that you pushed to your branch, set `BRANCH` in the first cell to your branch name.
 
 Two rules for training on Colab: save a checkpoint to Drive (`checkpoints/`) after **every epoch**, because sessions get cut, and copy the images to the Colab disk instead of reading them from Drive.
 
@@ -278,7 +280,7 @@ Teammates cannot create their own token for this repository. GitHub documents th
 
 ## Maintainer only: prepare the data (once)
 
-Hiển runs `notebooks/00_prepare_data.ipynb` in Colab (upload it like a start notebook, switch on notebook access for `GITHUB_TOKEN`, **Run all**). It does these things in order:
+Before the first run, upload the four notebooks (`00_setup_drive`, `00_prepare_data`, `ocr_00_start`, `corrector_00_start`) from `notebooks/` of your clone into `notebooks/` of the shared Drive folder. Then open `00_prepare_data.ipynb` from Drive with **Open with**, **Google Colaboratory**, switch on notebook access for `GITHUB_TOKEN`, and **Run all**. It does these things in order:
 
 1. Downloads UIT-HWDB-line from the Google Drive link in the dataset README into `data/uit_hwdb/`. If Google blocks the download, make a copy by hand from the link in the README and put the file into that folder.
 2. Prints the layout of the dataset and saves it as `outputs/dataset_report.txt`.
@@ -350,7 +352,8 @@ src/corrector/      role B: diacritic correction model
 src/eval/           role C: evaluation code
 src/stubs/          fake components so nobody has to wait for anybody
 demo/               role C: demo app
-notebooks/          Colab notebooks: 00_setup_drive, 00_prepare_data, ocr_00_start, corrector_00_start;
+notebooks/          Colab notebooks (originals; copies live in Drive notebooks/):
+                    00_setup_drive, 00_prepare_data, ocr_00_start, corrector_00_start;
                     your own notebooks use the prefixes ocr_*, corrector_*, eval_*
 tests/              unit tests
 data/ checkpoints/ outputs/    local only, NEVER committed (ignored by git)
@@ -370,6 +373,7 @@ Git holds code. **Google Drive holds everything big**: datasets, model checkpoin
 
 ```
 Vietnamese-Handwriting-OCR/
+  notebooks/          copies of the start notebooks, opened with Colab
   data/uit_hwdb/
   data/corpus/
   checkpoints/ocr/
@@ -379,15 +383,25 @@ Vietnamese-Handwriting-OCR/
 
 Role A writes `ocr_out.jsonl` into `outputs/`. Role C reads it from there. `outputs/` also holds `dataset_index.jsonl`, `splits.json` and `dataset_report.txt`; `data/corpus/` holds `viwiki_sentences.txt`.
 
-## The two data contracts (frozen after 8 Nov)
+## The data contracts (frozen since 8 Nov)
 
-1. **`ocr_out.jsonl`**: one JSON object per line with the fields `id`, `split` (`train`, `val` or `test`), `image_path` (relative to `/content/uit_hwdb`, copied from `dataset_index.jsonl`), `gt_text`, `ocr_text`, and optionally `ocr_conf`. Full definition in `contracts/ocr_out.schema.json`. Check any file with:
+Schemas, examples and details are in `contracts/README.md`. There are four contracts:
+
+1. **`dataset_index.jsonl`** (written by Hiển): one record per labeled image with `id`, `image_path` (relative to `/content/uit_hwdb`), `gt_text`, and `split` or `writer_id` only when the dataset has them for every record. Check it with:
+
+```
+python scripts/validate_dataset_index.py --index outputs/dataset_index.jsonl
+```
+
+2. **`splits.json`** (written by Hiển): record id to `train`, `val` or `test`. Check it together with the index by adding `--splits outputs/splits.json`.
+
+3. **`ocr_out.jsonl`** (written by Dương): one JSON object per line with the fields `id`, `split`, `image_path`, `gt_text`, `ocr_text`, and optionally `ocr_conf`. Full definition in `contracts/ocr_out.schema.json`. Check any file with:
 
 ```
 python scripts/validate_ocr_out.py path/to/ocr_out.jsonl
 ```
 
-2. **`correct(text)`** returns `{"text": str, "conf": [float]}`. Syllables are separated by spaces, so `len(conf) == len(text.split())`. A fake version lives in `src/stubs/identity_corrector.py`.
+4. **`correct(text)`** (written by Khánh) returns `{"text": str, "conf": [float]}`: one confidence per syllable, the same number of syllables as the input, and only diacritics change. Rules and a worked example are in `contracts/corrector_api.md`. Check your function with `check_correct_output` from `src/common/contract_checks.py`. A fake version lives in `src/stubs/identity_corrector.py`.
 
 **All strings must be Unicode NFC.** One Vietnamese letter can be stored as one precomposed character or as a base letter plus a combining mark. If the ground truth and the OCR output use different forms, the evaluation reports fake errors. Use `normalize_nfc` from `src/common/text_utils.py`.
 

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "splits.json: record id -> split",
+  "type": "object",
+  "additionalProperties": {"enum": ["train", "val", "test"]}
+}
