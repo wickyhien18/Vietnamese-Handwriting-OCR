@@ -1,0 +1,3 @@
+{"id": "train_lines_000001", "image_path": "train/lines/000001.png", "gt_text": "nhiều bạn đọc đã bày tỏ", "split": "train"}
+{"id": "train_lines_000002", "image_path": "train/lines/000002.png", "gt_text": "sự thật được nói lên", "split": "train"}
+{"id": "test_lines_000001", "image_path": "test/lines/000001.png", "gt_text": "thành phố lớn nhất nước", "split": "test"}

@@ -1,6 +1,6 @@
 import unittest
 
-from scripts.prepare_corpus import ALLOWED_CHARS, extract_sentences, iter_sentences
+from scripts.prepare_corpus import ALLOWED_CHARS, extract_sentences, iter_sentences, split_sentences
 
 GOOD = "H\u00e0 N\u1ed9i l\u00e0 th\u1ee7 \u0111\u00f4 c\u1ee7a Vi\u1ec7t Nam."
 
@@ -36,6 +36,34 @@ class CorpusTest(unittest.TestCase):
     def test_iter_sentences_deduplicates(self):
         documents = [{"text": GOOD}, {"text": GOOD + " " + GOOD}]
         self.assertEqual(list(iter_sentences(documents)), [GOOD])
+
+    def test_initials_do_not_split_a_sentence(self):
+        text = "Day la noi sinh cua cac Tong thong: Ulysses S. Grant (tai Point Pleasant), Rutherford B. Hayes (tai Delaware), James A. Garfield."
+        self.assertEqual(extract_sentences(text), [text])
+
+    def test_dotted_initials_do_not_split(self):
+        text = "Vi du cua A.G. Haudricourt ve viec do rat noi tieng."
+        self.assertEqual(extract_sentences(text), [text])
+
+    def test_lowercase_after_ellipsis_is_a_continuation(self):
+        text = "Day la mot danh sach dai nhu Argentina,... hay Nha Trang va nhieu noi khac."
+        self.assertEqual(extract_sentences(text), [text])
+
+    def test_real_boundaries_still_split(self):
+        text = "Hom nay troi rat dep o Ha Noi. Ngay mai troi se mua o Sai Gon."
+        self.assertEqual(len(extract_sentences(text)), 2)
+        self.assertEqual(split_sentences(text), ["Hom nay troi rat dep o Ha Noi.", "Ngay mai troi se mua o Sai Gon."])
+
+    def test_fragment_starting_with_lowercase_is_dropped(self):
+        self.assertEqual(extract_sentences("hay Toa Bach Oc nam o thu do cua nuoc nay."), [])
+
+    def test_sentence_starting_with_a_digit_is_kept(self):
+        text = "18 tuoi la tuoi duoc di bau cu o Hoa Ky."
+        self.assertEqual(extract_sentences(text), [text])
+
+    def test_numbers_with_dots_are_not_boundaries(self):
+        text = "Dan so thanh pho nay la 8.990.000 nguoi vao nam 2019."
+        self.assertEqual(extract_sentences(text), [text])
 
 
 if __name__ == "__main__":

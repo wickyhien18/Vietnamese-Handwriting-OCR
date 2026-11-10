@@ -383,15 +383,25 @@ Vietnamese-Handwriting-OCR/
 
 Role A writes `ocr_out.jsonl` into `outputs/`. Role C reads it from there. `outputs/` also holds `dataset_index.jsonl`, `splits.json` and `dataset_report.txt`; `data/corpus/` holds `viwiki_sentences.txt`.
 
-## The two data contracts (frozen after 8 Nov)
+## The data contracts (frozen since 8 Nov)
 
-1. **`ocr_out.jsonl`**: one JSON object per line with the fields `id`, `split` (`train`, `val` or `test`), `image_path` (relative to `/content/uit_hwdb`, copied from `dataset_index.jsonl`), `gt_text`, `ocr_text`, and optionally `ocr_conf`. Full definition in `contracts/ocr_out.schema.json`. Check any file with:
+Schemas, examples and details are in `contracts/README.md`. There are four contracts:
+
+1. **`dataset_index.jsonl`** (written by Hiển): one record per labeled image with `id`, `image_path` (relative to `/content/uit_hwdb`), `gt_text`, and `split` or `writer_id` only when the dataset has them for every record. Check it with:
+
+```
+python scripts/validate_dataset_index.py --index outputs/dataset_index.jsonl
+```
+
+2. **`splits.json`** (written by Hiển): record id to `train`, `val` or `test`. Check it together with the index by adding `--splits outputs/splits.json`.
+
+3. **`ocr_out.jsonl`** (written by Dương): one JSON object per line with the fields `id`, `split`, `image_path`, `gt_text`, `ocr_text`, and optionally `ocr_conf`. Full definition in `contracts/ocr_out.schema.json`. Check any file with:
 
 ```
 python scripts/validate_ocr_out.py path/to/ocr_out.jsonl
 ```
 
-2. **`correct(text)`** returns `{"text": str, "conf": [float]}`. Syllables are separated by spaces, so `len(conf) == len(text.split())`. A fake version lives in `src/stubs/identity_corrector.py`.
+4. **`correct(text)`** (written by Khánh) returns `{"text": str, "conf": [float]}`: one confidence per syllable, the same number of syllables as the input, and only diacritics change. Rules and a worked example are in `contracts/corrector_api.md`. Check your function with `check_correct_output` from `src/common/contract_checks.py`. A fake version lives in `src/stubs/identity_corrector.py`.
 
 **All strings must be Unicode NFC.** One Vietnamese letter can be stored as one precomposed character or as a base letter plus a combining mark. If the ground truth and the OCR output use different forms, the evaluation reports fake errors. Use `normalize_nfc` from `src/common/text_utils.py`.
 
