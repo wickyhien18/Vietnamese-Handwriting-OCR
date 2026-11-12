@@ -284,10 +284,11 @@ Before the first run, upload the four notebooks (`00_setup_drive`, `00_prepare_d
 
 1. Downloads UIT-HWDB-line from the Google Drive link in the dataset README into `data/uit_hwdb/`. If Google blocks the download, make a copy by hand from the link in the README and put the file into that folder.
 2. Prints the layout of the dataset and saves it as `outputs/dataset_report.txt`.
-3. Extracts the images on the Colab disk, then builds `outputs/dataset_index.jsonl` (`scripts/build_index.py`) and `outputs/splits.json` (`scripts/make_splits.py`).
-4. Builds the sentence corpus for role B from Vietnamese Wikipedia (`scripts/prepare_corpus.py`, dataset `wikimedia/wikipedia`, config `20231101.vi`, text under CC BY-SA 3.0 and GFDL according to the dataset card).
+3. Extracts the images on the Colab disk, then builds `outputs/dataset_index.jsonl` (`scripts/build_index.py`) and `outputs/splits.json` (`scripts/make_splits.py`). Every page folder becomes a `group_id`, so lines of one page never sit in two splits. The official train/test split is kept and validation is carved from the last train pages.
+4. Checks the contracts (`scripts/validate_dataset_index.py`) and how much of the val and test text already appears in the training text (`scripts/check_text_overlap.py`), because the same paragraph is written by several people.
+5. Builds the sentence corpus for role B from Vietnamese Wikipedia (`scripts/prepare_corpus.py`, dataset `wikimedia/wikipedia`, config `20231101.vi`, text under CC BY-SA 3.0 and GFDL according to the dataset card).
 
-`build_index.py` guesses the label format (JSON, CSV/TSV/TXT lines, or one text file per image). It was tested only on made-up layouts. If it stops with an error, send the printed output and `dataset_report.txt` to the group so the script can be adjusted to the real layout.
+`build_index.py` guesses the label format (JSON, CSV/TSV/TXT lines, or one text file per image). On UIT-HWDB-line it found a `label.json` in every page folder and labeled 7,229 of 7,273 images. If it stops with an error, send the printed output and `dataset_report.txt` to the group so the script can be adjusted to the real layout.
 
 Then tell Dương and Khánh that the data is ready.
 
@@ -387,7 +388,7 @@ Role A writes `ocr_out.jsonl` into `outputs/`. Role C reads it from there. `outp
 
 Schemas, examples and details are in `contracts/README.md`. There are four contracts:
 
-1. **`dataset_index.jsonl`** (written by Hiển): one record per labeled image with `id`, `image_path` (relative to `/content/uit_hwdb`), `gt_text`, and `split` or `writer_id` only when the dataset has them for every record. Check it with:
+1. **`dataset_index.jsonl`** (written by Hiển): one record per labeled image with `id`, `image_path` (relative to `/content/uit_hwdb`), `gt_text`, and `split`, `writer_id` or `group_id` (the page folder) only when the dataset has them for every record. Check it with:
 
 ```
 python scripts/validate_dataset_index.py --index outputs/dataset_index.jsonl

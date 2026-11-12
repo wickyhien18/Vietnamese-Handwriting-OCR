@@ -87,6 +87,12 @@ class IndexContractTest(unittest.TestCase):
     def test_invalid_split_value(self):
         self.assertTrue(check_dataset_index_records([self.record(split="dev")]))
 
+    def test_group_id_rules(self):
+        self.assertEqual(check_dataset_index_records([self.record(group_id="12")]), [])
+        self.assertTrue(check_dataset_index_records([self.record(group_id=12)]))
+        records = [self.record(id="a", group_id="1"), self.record(id="b")]
+        self.assertTrue(check_dataset_index_records(records))
+
 
 class SplitsContractTest(unittest.TestCase):
     def test_all_three_splits_needed(self):

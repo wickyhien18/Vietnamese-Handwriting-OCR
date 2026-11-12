@@ -53,7 +53,7 @@ Course rule: algorithms must be implemented by hand (sklearn only as a baseline 
 | Dates | Work |
 |---|---|
 | 9 Nov | Run `corrector_00_start.ipynb`: look at the corpus, the most ambiguous syllables, and how well the corpus covers the OCR training labels. Report the numbers to the group. |
-| 9-15 Nov | Noise generator. Frequency-table baseline (most common accented form of each syllable). Bigram + Viterbi by hand. Measure syllable accuracy, and separately on ambiguous syllables. **A first `correct()` (frequency table) by 15 Nov** so Hiển can integrate early. *Proposed: confirm in the group.* |
+| 9-15 Nov | Noise generator. Frequency-table baseline (most common accented form of each syllable). Bigram + Viterbi by hand. Measure syllable accuracy, and separately on ambiguous syllables. The OCR labels are news-style text with spaces around punctuation (a quote or a colon is its own token) and some all-caps lines, so add such variants to the noise and to the training text. **A first `correct()` (frequency table) by 15 Nov** so Hiển can integrate early. *Proposed: confirm in the group.* |
 | 16-22 Nov | Small transformer tagger (one accented syllable per input syllable). Confidence calibration by hand (temperature scaling). Final `correct()`. After week 1, adapt the noise generator to the real OCR error patterns that Hiển reports. |
 | 23-27 Nov | Error analysis. Write the part B section of the report. |
 
@@ -101,7 +101,7 @@ Course rule: algorithms must be implemented by hand (sklearn only as a baseline 
 
 1. **Hypothesis gate, 13-15 Nov:** if diacritic errors are only a small share of OCR errors, or the upper bound on the gain is tiny, the pipeline loses its point and the group decides whether to change direction.
 2. **OCR gate, end of week 1:** if CER is too high, choose a fallback (see role A).
-3. **Data gate, 9 Nov:** if `build_index.py` cannot read the real dataset layout, the script is adjusted before anything else starts.
+3. **Data gate, 9 Nov (passed):** `build_index.py` read the real layout and labeled 7,229 of 7,273 line images. The 44 unlabeled images are being checked. Validation is carved by page folder (`group_id`) and the text overlap between splits is measured with `scripts/check_text_overlap.py`.
 
 ## Open decisions
 

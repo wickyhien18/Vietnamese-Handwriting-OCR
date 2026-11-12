@@ -8,7 +8,8 @@
     "image_path": {"type": "string", "minLength": 1, "description": "relative to the dataset root, which is /content/uit_hwdb on Colab"},
     "gt_text": {"type": "string", "minLength": 1, "description": "ground truth text, NFC, syllables separated by single spaces"},
     "split": {"enum": ["train", "val", "test"], "description": "official split of the dataset, only if it exists for every record"},
-    "writer_id": {"type": "string", "description": "only if it is known for every record"}
+    "writer_id": {"type": "string", "description": "only if it is known for every record"},
+    "group_id": {"type": "string", "description": "lines of one group stay in one split, for example the page folder; only if known for every record"}
   },
   "additionalProperties": false
 }
