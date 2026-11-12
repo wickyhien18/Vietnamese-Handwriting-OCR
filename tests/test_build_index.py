@@ -134,6 +134,63 @@ class BuildIndexTest(unittest.TestCase):
         self.assertEqual(mode, "by_id")
         self.assertEqual(len(result), 30)
 
+    def test_group_regex_and_counts(self):
+        with tempfile.TemporaryDirectory() as root:
+            for page in ("1", "2"):
+                touch(root, "train_data/%s/1.jpg" % page)
+                write_text(root, "train_data/%s/label.json" % page, json.dumps({"1.jpg": TEXT_A}, ensure_ascii=False))
+            records, report = build_index(root, group_regex=r"train_data/(\d+)/")
+        self.assertEqual({r["group_id"] for r in records}, {"1", "2"})
+        self.assertEqual(report["groups"], 2)
+
+    def test_partial_group_ids_are_dropped(self):
+        with tempfile.TemporaryDirectory() as root:
+            touch(root, "a/1.jpg")
+            touch(root, "b/1.jpg")
+            write_text(root, "a/label.json", json.dumps({"1.jpg": TEXT_A}, ensure_ascii=False))
+            write_text(root, "b/label.json", json.dumps({"1.jpg": TEXT_B}, ensure_ascii=False))
+            records, report = build_index(root, group_regex=r"^(a)/")
+        self.assertTrue(all("group_id" not in r for r in records))
+        self.assertIn("group_note", report)
+
+    def test_unlabeled_images_are_explained(self):
+        with tempfile.TemporaryDirectory() as root:
+            for k in range(40):
+                touch(root, "p/%d.jpg" % k)
+            labels = {"%d.jpg" % k: TEXT_A for k in range(38)}
+            labels["38.jpg"] = "   "
+            write_text(root, "p/label.json", json.dumps(labels, ensure_ascii=False))
+            records, report = build_index(root)
+        self.assertEqual(report["labeled"], 38)
+        self.assertEqual(report["no_label_entry"], 1)
+        self.assertEqual(report["empty_label"], 1)
+        self.assertEqual(sorted(report["unlabeled_examples"]), ["p/38.jpg", "p/39.jpg"])
+
+    def test_real_layout_end_to_end(self):
+        """Mirrors UIT_HWDB_line: <root>/<top>/{train_data,test_data}/<page>/<n>.jpg plus label.json per page."""
+        from scripts.make_splits import make_splits
+        with tempfile.TemporaryDirectory() as root:
+            pages = [("train_data", str(n)) for n in range(1, 21)] + [("test_data", str(n)) for n in range(21, 23)]
+            for folder, page in pages:
+                labels = {}
+                for line in range(1, 11):
+                    touch(root, "TOP/%s/%s/%d.jpg" % (folder, page, line))
+                    labels["%d.jpg" % line] = "%s %s %d" % (TEXT_A, page, line)
+                write_text(root, "TOP/%s/%s/label.json" % (folder, page), json.dumps(labels, ensure_ascii=False))
+            records, report = build_index(root, group_regex=r"(?:train_data|test_data)/(\d+)/")
+        self.assertEqual(report["labeled"], 220)
+        self.assertEqual(report["split_counts"], {"train": 200, "test": 20})
+        result, mode = make_splits(records)
+        self.assertEqual(mode, "official+carved_val_by_group")
+        by_group = {}
+        for rec in records:
+            by_group.setdefault(rec["group_id"], set()).add(result[rec["id"]])
+        self.assertTrue(all(len(v) == 1 for v in by_group.values()))
+        val_pages = sorted((g for g, v in by_group.items() if v == {"val"}), key=int)
+        # 200 train lines, target 22 for val, whole pages only: pages 20, 19 and 18 (30 lines)
+        self.assertEqual(val_pages, ["18", "19", "20"])
+        self.assertEqual(sum(1 for v in result.values() if v == "val"), 30)
+
 
 if __name__ == "__main__":
     unittest.main()

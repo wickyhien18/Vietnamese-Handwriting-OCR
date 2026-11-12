@@ -6,7 +6,7 @@ from src.common.text_utils import strip_diacritics
 
 SPLITS = ("train", "val", "test")
 INDEX_REQUIRED = ("id", "image_path", "gt_text")
-INDEX_OPTIONAL = ("split", "writer_id")
+INDEX_OPTIONAL = ("split", "writer_id", "group_id")
 
 
 def _is_number(value):
@@ -53,6 +53,7 @@ def check_dataset_index_records(records):
     seen = set()
     with_split = 0
     with_writer = 0
+    with_group = 0
     for number, rec in enumerate(records, start=1):
         label = "record %d" % number
         for key in INDEX_REQUIRED:
@@ -82,10 +83,16 @@ def check_dataset_index_records(records):
             with_writer += 1
             if not isinstance(rec["writer_id"], str):
                 problems.append("%s: writer_id must be a string" % label)
+        if "group_id" in rec:
+            with_group += 1
+            if not isinstance(rec["group_id"], str):
+                problems.append("%s: group_id must be a string" % label)
     if records and 0 < with_split < len(records):
         problems.append("split is present for only some records")
     if records and 0 < with_writer < len(records):
         problems.append("writer_id is present for only some records")
+    if records and 0 < with_group < len(records):
+        problems.append("group_id is present for only some records")
     return problems
 
 

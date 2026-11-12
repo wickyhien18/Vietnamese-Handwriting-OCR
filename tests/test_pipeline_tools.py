@@ -77,6 +77,39 @@ class SplitsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             make_splits(records)
 
+    def test_carve_val_takes_the_last_groups_whole(self):
+        records = make_records(300)
+        for k, rec in enumerate(records):
+            rec["group_id"] = str(k // 10 + 1)          # groups "1" .. "30", ten records each
+            rec["split"] = "train" if k < 270 else "test"
+        result, mode = make_splits(records)
+        self.assertEqual(mode, "official+carved_val_by_group")
+        val_groups = {rec["group_id"] for rec in records if result[rec["id"]] == "val"}
+        train_groups = {rec["group_id"] for rec in records if result[rec["id"]] == "train"}
+        # train has groups 1..27 (270 records), so val takes 30 records: the last three groups.
+        # Natural order matters: a plain text sort would pick "9", "8", "7" as the last ones.
+        self.assertEqual(val_groups, {"25", "26", "27"})
+        self.assertFalse(val_groups & train_groups)
+        self.assertEqual(sum(1 for v in result.values() if v == "val"), 30)
+        self.assertTrue(all(result[rec["id"]] == "test" for rec in records if rec["split"] == "test"))
+
+    def test_group_split_without_official_split(self):
+        records = make_records(600)
+        for k, rec in enumerate(records):
+            rec["group_id"] = "g%03d" % (k // 10)
+        result, mode = make_splits(records)
+        self.assertEqual(mode, "by_group")
+        by_group = {}
+        for rec in records:
+            by_group.setdefault(rec["group_id"], set()).add(result[rec["id"]])
+        self.assertTrue(all(len(v) == 1 for v in by_group.values()))
+
+    def test_partial_group_ids_are_rejected(self):
+        records = make_records(4)
+        records[0]["group_id"] = "g1"
+        with self.assertRaises(ValueError):
+            make_splits(records)
+
 
 class StubOcrTest(unittest.TestCase):
     def test_corrupt_text_keeps_syllable_count(self):

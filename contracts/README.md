@@ -19,7 +19,7 @@ All text is Unicode NFC. Examples are in `examples/`.
 {"id": "train_lines_000001", "image_path": "train/lines/000001.png", "gt_text": "nhiều bạn đọc đã bày tỏ", "split": "train"}
 ```
 
-`image_path` is relative to the dataset root. On Colab the zip is extracted to `/content/uit_hwdb`, so the image is `/content/uit_hwdb/train/lines/000001.png`. `split` and `writer_id` appear only when the dataset really has them for every record.
+`image_path` is relative to the dataset root. On Colab the zip is extracted to `/content/uit_hwdb`, so the image is `/content/uit_hwdb/train/lines/000001.png`. `split`, `writer_id` and `group_id` appear only when they are known for every record. `group_id` marks lines that belong together (for UIT-HWDB-line, the page folder) and that must stay in one split.
 
 **`splits.json`**, the same split for everybody:
 

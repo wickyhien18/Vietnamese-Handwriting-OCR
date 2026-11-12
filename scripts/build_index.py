@@ -2,7 +2,7 @@
 
 It finds the images, finds the label files, matches them and writes one JSON record
 per labeled image: id, image_path (relative to --root), gt_text, and when they can
-be detected: split (from folder names such as train/val/test) and writer_id.
+be detected: split (from folder names such as train/val/test), writer_id and group_id.
 
 Label formats understood:
   * JSON or JSONL: {"file.png": "text"}, {"file.png": {"text": ...}}, or a list of
@@ -17,6 +17,8 @@ so the adapter can be adjusted to the real layout.
 Usage:
   python scripts/build_index.py --root /content/uit_hwdb --out outputs/dataset_index.jsonl
   optional: --writer-regex "writer(\\d+)"   (first group of the regex on the image path)
+            --group-regex  "(?:train|test)_data/(\\d+)/"   lines of one group must stay in one split,
+                           for example the page folder of the image
 """
 
 import argparse
@@ -230,7 +232,7 @@ def collect_labels(root, files, lookup):
     return labels, stats
 
 
-def build_index(root, writer_regex=None):
+def build_index(root, writer_regex=None, group_regex=None):
     files = list_files(root)
     images = [rel for rel in files if ext_of(rel) in IMAGE_EXT]
     if not images:
@@ -240,9 +242,13 @@ def build_index(root, writer_regex=None):
 
     records = []
     used_ids = set()
+    missing_label = []
+    empty_label = []
     for rel in images:
-        text = normalize_text(labels.get(rel, ""))
+        raw = labels.get(rel)
+        text = normalize_text(raw or "")
         if not text:
+            (missing_label if raw is None else empty_label).append(rel)
             continue
         rec_id = re.sub(r"[^\w\-]+", "_", strip_ext(rel))
         if rec_id in used_ids:
@@ -256,6 +262,10 @@ def build_index(root, writer_regex=None):
             match = re.search(writer_regex, rel)
             if match:
                 rec["writer_id"] = match.group(1)
+        if group_regex:
+            match = re.search(group_regex, rel)
+            if match:
+                rec["group_id"] = match.group(1)
         records.append(rec)
 
     labeled_share = len(records) / len(images)
@@ -265,6 +275,9 @@ def build_index(root, writer_regex=None):
         "unmatched_label_keys": len(stats["unmatched"]),
         "ambiguous": stats["ambiguous"],
         "conflicts": stats["conflicts"],
+        "no_label_entry": len(missing_label),
+        "empty_label": len(empty_label),
+        "unlabeled_examples": (missing_label + empty_label)[:5],
     }
     if labeled_share < MIN_LABELED_SHARE:
         lines = ["only %d of %d images got a label (need at least %d%%)" % (
@@ -286,9 +299,15 @@ def build_index(root, writer_regex=None):
         for rec in records:
             rec.pop("writer_id", None)
         report["writer_note"] = "writer id found for only some images, ignored"
+    with_group = [rec for rec in records if "group_id" in rec]
+    if with_group and len(with_group) != len(records):
+        for rec in records:
+            rec.pop("group_id", None)
+        report["group_note"] = "group id found for only some images, ignored"
     records.sort(key=lambda r: r["id"])
     report["split_counts"] = dict(Counter(rec.get("split", "none") for rec in records))
     report["writers"] = len({rec["writer_id"] for rec in records if "writer_id" in rec})
+    report["groups"] = len({rec["group_id"] for rec in records if "group_id" in rec})
     return records, report
 
 
@@ -297,9 +316,10 @@ def main():
     parser.add_argument("--root", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--writer-regex", default=None)
+    parser.add_argument("--group-regex", default=None)
     args = parser.parse_args()
     try:
-        records, report = build_index(args.root, args.writer_regex)
+        records, report = build_index(args.root, args.writer_regex, args.group_regex)
     except IndexBuildError as error:
         print("ERROR: " + str(error))
         sys.exit(1)

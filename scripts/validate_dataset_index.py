@@ -35,6 +35,8 @@ def main():
         print("official split counts: %s" % dict(Counter(rec.get("split") for rec in records)))
     if records and "writer_id" in records[0]:
         print("distinct writers: %d" % len({rec.get("writer_id") for rec in records}))
+    if records and "group_id" in records[0]:
+        print("distinct groups: %d" % len({rec.get("group_id") for rec in records}))
 
     if args.splits:
         splits = read_splits(args.splits)
