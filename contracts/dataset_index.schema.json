@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "dataset_index record (one JSON object per line)",
+  "type": "object",
+  "required": ["id", "image_path", "gt_text"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1, "description": "unique id, also the key used in splits.json"},
+    "image_path": {"type": "string", "minLength": 1, "description": "relative to the dataset root, which is /content/uit_hwdb on Colab"},
+    "gt_text": {"type": "string", "minLength": 1, "description": "ground truth text, NFC, syllables separated by single spaces"},
+    "split": {"enum": ["train", "val", "test"], "description": "official split of the dataset, only if it exists for every record"},
+    "writer_id": {"type": "string", "description": "only if it is known for every record"}
+  },
+  "additionalProperties": false
+}
