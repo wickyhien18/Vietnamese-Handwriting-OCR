@@ -199,6 +199,26 @@ def verdict(value, split):
     return "resplit", "group the duplicate pages into one group and re-split val, then tell the team"
 
 
+def group_sort_key(group):
+    """Natural order for page ids: numeric ids by value, then any other ids as text."""
+    return (0, int(group), "") if group.isdigit() else (1, 0, group)
+
+
+def top_source(sources):
+    """Train page with the most shared windows as (group, count, tied_count).
+
+    Several train pages often carry the same text and then share the top count. The
+    lowest page number is chosen so that the result does not change between runs,
+    and tied_count says how many other pages had the same count.
+    """
+    if not sources:
+        return None
+    best = max(sources.values())
+    tied = sorted((group for group, count in sources.items() if count == best),
+                  key=group_sort_key)
+    return tied[0], best, len(tied) - 1
+
+
 def group_rows(results, top):
     by_group = defaultdict(list)
     for result in results:
@@ -208,9 +228,10 @@ def group_rows(results, top):
         sources = Counter()
         for item in items:
             sources.update(item.sources)
-        best = sources.most_common(1)
+        best = top_source(sources)
         rows.append({"group": group, "stats": summarize(items),
-                     "top_source": best[0] if best else None})
+                     "top_source": best[:2] if best else None,
+                     "tied": best[2] if best else 0})
     rows.sort(key=lambda row: (-row["stats"]["major_pct"], -row["stats"]["lines"], row["group"]))
     return rows[:top]
 
@@ -230,7 +251,11 @@ def format_group_table(name, rows):
            "    %-8s %6s %8s %8s %8s  %s" % ("group", "lines", "exact", "any", "major", "top train page")]
     for row in rows:
         stats = row["stats"]
-        source = "-" if row["top_source"] is None else "%s (%d windows)" % row["top_source"]
+        source = "-"
+        if row["top_source"] is not None:
+            source = "%s (%d windows)" % row["top_source"]
+            if row["tied"]:
+                source += " +%d tied" % row["tied"]
         out.append("    %-8s %6d %7.1f%% %7.1f%% %7.1f%%  %s" % (
             row["group"] or "-", stats["lines"], stats["exact_pct"], stats["any_pct"],
             stats["major_pct"], source))
