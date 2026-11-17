@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Sequence
 
 import numpy as np
-from PIL import Image
 
 
 def preprocess_line_image(
@@ -33,6 +32,8 @@ def preprocess_line_image(
     Returns:
         2D float32 NumPy array of shape (fixed_height, new_width) in [-1.0, 1.0].
     """
+    from PIL import Image
+
     with Image.open(img_path) as img:
         gray_img = img.convert("L")
         orig_w, orig_h = gray_img.size
