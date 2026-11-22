@@ -1,5 +1,6 @@
 """Unit tests verifying HandWrittenCTCLoss against torch.nn.CTCLoss in float64."""
 
+import itertools
 import unittest
 
 try:
@@ -107,6 +108,54 @@ class TestHandWrittenCTCLoss(unittest.TestCase):
             torch.allclose(logits_our.grad, logits_ref.grad, atol=self.TOLERANCE, rtol=self.TOLERANCE),
             msg=f"Max grad diff: {(logits_our.grad - logits_ref.grad).abs().max().item()}",
         )
+
+    @staticmethod
+    def _ctc_collapse(path: tuple[int, ...], blank: int = 0) -> tuple[int, ...]:
+        """Collapse a frame-level path by merging adjacent duplicates and removing blanks."""
+        collapsed: list[int] = []
+        prev: int | None = None
+        for token in path:
+            if token != prev and token != blank:
+                collapsed.append(token)
+            prev = token
+        return tuple(collapsed)
+
+    def test_exhaustive_enumeration_matches_forward_dp(self) -> None:
+        """Brute-force sum over all C^T paths must match log-space forward DP (Part B)."""
+        torch.manual_seed(2026)
+        num_classes = 4  # 0: <blank>, 1: 'a', 2: 'b', 3: 'c'
+        time_steps = 5   # 4^5 = 1024 total paths
+
+        logits = torch.randn((time_steps, 1, num_classes), dtype=torch.float64)
+        log_probs = F.log_softmax(logits, dim=-1)
+        probs = torch.exp(log_probs[:, 0, :])  # (T, C)
+
+        # Compute exact probability of every collapsed label via exhaustive enumeration
+        exact_label_probs: dict[tuple[int, ...], torch.Tensor] = {}
+        for path in itertools.product(range(num_classes), repeat=time_steps):
+            path_prob = torch.tensor(1.0, dtype=torch.float64)
+            for t, token in enumerate(path):
+                path_prob = path_prob * probs[t, token]
+            label = self._ctc_collapse(path, blank=0)
+            exact_label_probs[label] = exact_label_probs.get(
+                label, torch.tensor(0.0, dtype=torch.float64)
+            ) + path_prob
+
+        # Verify against ctc_forward_loss on both standard label (1, 2) and repeated label (1, 1)
+        for label_tuple in [(1, 2), (1, 1), (2,)]:
+            targets = torch.tensor([list(label_tuple)], dtype=torch.long)
+            input_lengths = torch.tensor([time_steps], dtype=torch.long)
+            target_lengths = torch.tensor([len(label_tuple)], dtype=torch.long)
+
+            dp_loss = ctc_forward_loss(
+                log_probs, targets, input_lengths, target_lengths, reduction="none"
+            )[0]
+            brute_force_loss = -torch.log(exact_label_probs[label_tuple])
+
+            self.assertTrue(
+                torch.allclose(dp_loss, brute_force_loss, atol=self.TOLERANCE, rtol=self.TOLERANCE),
+                msg=f"Label {label_tuple}: DP={dp_loss.item()}, BruteForce={brute_force_loss.item()}",
+            )
 
 
 if __name__ == "__main__":
