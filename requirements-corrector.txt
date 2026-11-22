@@ -1,0 +1,8 @@
+# Role B (diacritic corrector), on top of requirements.txt.
+# Colab already has torch, datasets, matplotlib and nltk; corrector_06_final.ipynb installs hmmlearn.
+# The n-gram levels (frequency, bigram) need only numpy from requirements.txt.
+torch>=2.0          # transformer tagger (src/corrector/tagger.py)
+datasets>=2.14      # Vietnamese Wikipedia download (corrector_05_clean_corpus.ipynb)
+matplotlib>=3.7     # confidence histogram
+nltk>=3.8           # reference check of the n-gram model (item 7)
+hmmlearn>=0.3       # reference check of Viterbi (item 7)

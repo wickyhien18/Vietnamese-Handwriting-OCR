@@ -47,4 +47,4 @@ Counts at the time of writing: train 5,369, val 636, test 201 lines. The index h
 
 ## Frozen since 8 Nov
 
-The fields and keys above do not change, and the formats did not change on 12 Nov: only which lines the two files contain. Two rules in `corrector_api.md` (same number of syllables, only diacritics change) are clarifications added on 9 Nov and wait for Khánh's confirmation.
+The fields and keys above do not change, and the formats did not change on 12 Nov: only which lines the two files contain. Two rules in `corrector_api.md` (same number of syllables, only diacritics change) are clarifications added on 9 Nov, confirmed by Khánh on 22 Nov.

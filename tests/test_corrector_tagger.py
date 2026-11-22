@@ -50,6 +50,20 @@ class TaggerTest(unittest.TestCase):
             b = model(*padded[:3])[0, :2, : a.size(1)]
         torch.testing.assert_close(a, b)
 
+    def test_edge_cases_pass_the_contract(self):
+        from src.common.contract_checks import check_correct_output
+        from src.corrector.tagger import TransformerCorrector
+        from tests.test_corrector_api import EDGE_CASES
+        corrector = TransformerCorrector(self.make_model(), self.vocab, temperature=1.0)
+        for text in EDGE_CASES + [" ".join(["ban"] * 40)]:  # 40 syllables: longer than max_len 16
+            out = corrector.correct(text)
+            self.assertEqual(check_correct_output(text, out), [], (text, out))
+
+    def test_matches_torch_multihead_attention(self):
+        import torch
+        from src.corrector.reference_check import compare_attention
+        self.assertLess(compare_attention(d_model=32, n_heads=4, seed=0)["max_abs_diff"], 1e-5)
+
     def test_learns_context_and_contract(self):
         import torch
         from src.corrector.noise import NoiseConfig
