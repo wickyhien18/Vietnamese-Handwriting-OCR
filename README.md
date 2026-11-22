@@ -235,7 +235,7 @@ The shared data is prepared once by the maintainer (see "Maintainer only: prepar
 
 ```
 data/uit_hwdb/<archive>.zip          the UIT-HWDB-line images and labels
-data/corpus/viwiki_sentences.txt     Vietnamese sentences for role B
+data/corpus/train.txt, val.txt, test.txt   the main corpus for role B (built by corrector_05_clean_corpus.ipynb)
 outputs/dataset_index.jsonl          one record per labeled image: id, image_path, gt_text
 outputs/splits.json                  id -> train / val / test (the same for everybody)
 outputs/dataset_report.txt           what the dataset folder looks like
@@ -382,7 +382,7 @@ Vietnamese-Handwriting-OCR/
   outputs/
 ```
 
-Role A writes `ocr_out.jsonl` into `outputs/`. Role C reads it from there. `outputs/` also holds `dataset_index.jsonl`, `splits.json` and `dataset_report.txt`; `data/corpus/` holds `viwiki_sentences.txt`.
+Role A writes `ocr_out.jsonl` into `outputs/`. Role C reads it from there. `outputs/` also holds `dataset_index.jsonl`, `splits.json` and `dataset_report.txt`; `data/corpus/` holds the main corpus of role B: `train.txt`, `val.txt`, `test.txt` and `stats.json`, built by `notebooks/corrector_05_clean_corpus.ipynb` (`src/corrector/corpus.py`; no exact overlap between the three files). The first version is kept in `data/corpus_v1/`, and `viwiki_sentences.txt` from `scripts/prepare_corpus.py` is not used by the corrector. See `docs/corrector_datasheet.md`.
 
 ## The data contracts (frozen since 8 Nov)
 

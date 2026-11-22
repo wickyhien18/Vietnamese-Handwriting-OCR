@@ -47,7 +47,7 @@ Course rule: algorithms must be implemented by hand (sklearn only as a baseline 
 
 **Goal:** given a Vietnamese sentence with wrong or missing diacritics, return the fixed sentence and one confidence number per syllable.
 
-**Input:** `data/corpus/viwiki_sentences.txt` on Drive. You create the training pairs yourself by corrupting clean text: remove diacritics, swap tone marks, swap vowel shape marks, each with some probability.
+**Input:** the main corpus `data/corpus/train.txt`, `val.txt`, `test.txt` on Drive (fixed on 22 Nov, built by `corrector_05_clean_corpus.ipynb`, datasheet in `docs/corrector_datasheet.md`; `viwiki_sentences.txt` is not used). You create the training pairs yourself by corrupting clean text: remove diacritics, swap tone marks, swap vowel shape marks, each with some probability.
 **Output:** the function `correct(text)` in `src/corrector/` following the contract (`{"text": str, "conf": [float]}`, one confidence per space-separated syllable); trained weights in Drive `checkpoints/corrector/`.
 
 | Dates | Work |

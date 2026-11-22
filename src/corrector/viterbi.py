@@ -91,24 +91,34 @@ def path_log_prob(path, observed, model, emission):
     return total + model.log_p(prev, END)
 
 
-def local_confidence(path, observed, model, emission, k=8):
-    """Confidence of each chosen syllable: its probability among all candidates at that position,
-    with its two neighbours on the path held fixed.
+def local_scores(path, observed, model, emission, k=8):
+    """For each position: {candidate: score}, with the two neighbours on the path held fixed.
 
-        conf_i = exp(score(c_i)) / sum over candidates c of exp(score(c))
         score(c) = log P(c | w_{i-1}) + log P(w_{i+1} | c) + log P(o_i | c)
-
-    One candidate only -> confidence 1.0.
     """
-    conf = []
+    rows = []
     n = len(path)
-    for i, chosen in enumerate(path):
+    for i in range(n):
         prev = path[i - 1] if i > 0 else START
         nxt = path[i + 1] if i + 1 < n else END
-        scores = {}
-        for c in model.candidates(observed[i], k):
-            scores[c] = model.log_p(prev, c) + model.log_p(c, nxt) + emission(observed[i], c)
-        top = max(scores.values())
-        z = sum(math.exp(s - top) for s in scores.values())  # subtract the max to avoid overflow
-        conf.append(math.exp(scores[chosen] - top) / z)
-    return conf
+        rows.append({c: model.log_p(prev, c) + model.log_p(c, nxt) + emission(observed[i], c)
+                     for c in model.candidates(observed[i], k)})
+    return rows
+
+
+def softmax_confidence(scores, chosen, temperature=1.0):
+    """exp(score(chosen) / T) / sum over candidates of exp(score(c) / T).
+
+    The maximum is subtracted before exp() so that large scores do not overflow.
+    T is fitted on validation data with calibration.fit_temperature (temperature scaling).
+    """
+    top = max(scores.values())
+    z = sum(math.exp((s - top) / temperature) for s in scores.values())
+    return math.exp((scores[chosen] - top) / temperature) / z
+
+
+def local_confidence(path, observed, model, emission, k=8, temperature=1.0):
+    """Confidence of each chosen syllable: its probability among all candidates at that position,
+    with its two neighbours on the path held fixed (see local_scores). One candidate -> 1.0."""
+    rows = local_scores(path, observed, model, emission, k)
+    return [softmax_confidence(row, chosen, temperature) for row, chosen in zip(rows, path)]
