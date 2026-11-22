@@ -6,6 +6,20 @@ import torch
 import torch.nn as nn
 
 
+def _safe_logsumexp(x: torch.Tensor, dim: int = -1) -> torch.Tensor:
+    """Numerically stable logsumexp that avoids (-inf) - (-inf) = NaN in backward()."""
+    max_val, _ = torch.max(x, dim=dim, keepdim=True)
+    is_all_inf = torch.isneginf(max_val)
+    safe_max = torch.where(is_all_inf, torch.zeros_like(max_val), max_val)
+
+    exp_shifted = torch.exp(x - safe_max)
+    sum_exp = torch.sum(exp_shifted, dim=dim, keepdim=True)
+    safe_sum = torch.where(is_all_inf, torch.ones_like(sum_exp), sum_exp)
+
+    out = safe_max + torch.log(safe_sum)
+    return torch.where(is_all_inf, max_val, out).squeeze(dim)
+
+
 def _prepare_padded_targets(
     targets: torch.Tensor,
     target_lengths: torch.Tensor,
@@ -117,7 +131,7 @@ def ctc_forward_loss(
         step_2_raw = torch.cat([pad_2, alpha[:, :-2]], dim=1)
         step_2 = torch.where(can_jump, step_2_raw, neg_inf)
 
-        trans_log_prob = torch.logsumexp(torch.stack([stay, step_1, step_2], dim=-1), dim=-1)
+        trans_log_prob = _safe_logsumexp(torch.stack([stay, step_1, step_2], dim=-1), dim=-1)
         alpha = trans_log_prob + emit_t
         alphas.append(alpha)
 
@@ -135,7 +149,7 @@ def ctc_forward_loss(
     end_odd = torch.gather(alpha_end, dim=1, index=idx_odd).squeeze(1)
     end_odd = torch.where(target_lengths > 0, end_odd, neg_inf)
 
-    total_log_prob = torch.logsumexp(torch.stack([end_even, end_odd], dim=-1), dim=-1)
+    total_log_prob = _safe_logsumexp(torch.stack([end_even, end_odd], dim=-1), dim=-1)
 
     # Invalidate samples with non-positive or out-of-bounds input lengths
     valid_input = (input_lengths > 0) & (input_lengths <= max_time)
