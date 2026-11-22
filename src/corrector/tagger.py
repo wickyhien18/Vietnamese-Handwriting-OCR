@@ -208,7 +208,8 @@ class TransformerCorrector:
         self.vocab = vocab
         self.temperature = temperature
         self.device = device
-        self.max_len = max_len
+        # Never longer than the position table of the model, whatever max_len was passed.
+        self.max_len = min(max_len, model.pos_emb.num_embeddings)
 
     @torch.no_grad()
     def correct_words(self, observed):

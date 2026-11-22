@@ -13,7 +13,7 @@ Tạo cặp huấn luyện (câu bị làm nhiễu dấu, câu đúng) cho bộ 
 | Nguồn | Wikipedia tiếng Việt qua Hugging Face: dataset `wikimedia/wikipedia`, cấu hình `20231101.vi` (bản xuất ngày 01/11/2023, khoảng 1,29 triệu bài) |
 | Giấy phép | CC BY-SA 3.0 và GFDL, theo thẻ dữ liệu của dataset (như README của nhóm đã ghi) |
 | Cách tải | Đọc dạng stream, theo thứ tự có sẵn trong dataset, dừng khi đủ `MAX_SENTENCES = 1.500.000` câu |
-| Ngày tải | Bản 1 (`data/corpus_v1/`): 08/11/2026. Bản chính (`data/corpus/`): **[điền sau khi chạy]** (`built_at` trong `data/corpus/stats.json`) |
+| Ngày tải | Bản 1 (`data/corpus_v1/`): 08/11/2026. Bản chính (`data/corpus/`): 22/11/2026 (`built_at` = 2026-11-22 08:53:31 giờ UTC của Colab) |
 
 ## 3. Tiền xử lý (`src/corrector/corpus.py`)
 
@@ -33,10 +33,12 @@ Cho cả kho:
 | | train ∩ val (trùng nguyên văn) | train ∩ test | val có chung 8-gram với train | test có chung 8-gram với train |
 |---|---|---|---|---|
 | Bản 1, Hiển đo | 39 câu | 44 câu | 523 / 13.461 | 543 / 13.405 |
-| Bản 1, `corpus_overlap` | **[điền sau khi chạy]** | **[điền sau khi chạy]** | **[điền sau khi chạy]** | **[điền sau khi chạy]** |
-| Bản chính | **0** (kiểm tra bằng `assert`) | **0** | **[điền sau khi chạy]** | **[điền sau khi chạy]** |
+| Bản 1, `corpus_overlap` (mọi câu) | 119 / 15.057 | 125 / 15.061 | 2.340 / 15.057 | 2.367 / 15.061 |
+| Bản chính | **0** / 15.122 (kiểm tra bằng `assert`) | **0** / 15.028 | 2.201 / 15.122 | 2.176 / 15.028 |
 
-Số dòng của `corpus_v1/train.txt` từng trùng với val hoặc test nằm trong `outputs/corrector_corpus_removed_lines.json`. Toàn bộ số liệu nằm trong `outputs/corrector_corpus_report.json`.
+Có **334 dòng** của `corpus_v1/train.txt` trùng với val hoặc test. Danh sách các dòng đó nằm trong `outputs/corrector_corpus_removed_lines.json`. Toàn bộ số liệu nằm trong `outputs/corrector_corpus_report.json`.
+
+Số của Hiển (39 và 44) và số của `corpus_overlap` (119 và 125) dùng cùng cách chuẩn hóa nhưng khác phạm vi: `corpus_overlap` đếm trên mọi câu của val và test, kể cả câu ngắn dưới 8 từ; số của Hiển tính trên 13.461 và 13.405 câu. Với cả hai cách đếm, bản chính đều bằng 0.
 
 Bản 1 có câu trùng vì cách chia cũ băm câu **nguyên văn**: hai câu chỉ khác dấu câu hoặc chữ hoa bị tách sang hai tập. Bản chính băm câu **đã chuẩn hóa**, nên không còn trường hợp này. Trùng 8-gram không bằng 0 vì các cụm từ thường gặp lặp lại tự nhiên giữa các câu khác nhau; nhóm không đặt mục tiêu bằng 0 cho số này.
 
@@ -46,14 +48,14 @@ So với dòng val và test của UIT-HWDB (`check_text_overlap.py --corpus`): b
 
 | | Bản 1 (08/11) | Bản chính |
 |---|---|---|
-| Số bài đã đọc | 39.957 | **[điền sau khi chạy]** |
-| Câu train / val / test | 1.469.986 / 15.057 / 15.061 | **[điền sau khi chạy]** |
-| Câu trùng đã bỏ | 121.428 | **[điền sau khi chạy]** |
-| Âm tiết trong train | 32.538.245 | **[điền sau khi chạy]** (`train_tokens`) |
+| Số bài đã đọc | 39.957 | 54.860 |
+| Câu train / val / test | 1.469.986 / 15.057 / 15.061 | 1.469.903 / 15.122 / 15.028 |
+| Câu trùng đã bỏ | 121.428 | 159.875 (bỏ trùng sau khi chuẩn hóa nên nhiều hơn) |
+| Âm tiết trong train | 32.538.245 | 29.617.815 (câu tối đa 40 thay vì 50 âm tiết) |
 
 ## 6. Hạn chế đã biết
 
-- **Lệch chủ đề:** kho lấy các bài **đầu tiên** theo thứ tự của dataset (khoảng 40 nghìn trên 1,29 triệu bài), không lấy ngẫu nhiên, nên một số chủ đề bị dư (ví dụ nhiều câu về Thụy Điển).
+- **Lệch chủ đề:** kho lấy các bài **đầu tiên** theo thứ tự của dataset (54.860 trên khoảng 1,29 triệu bài), không lấy ngẫu nhiên, nên một số chủ đề bị dư (ví dụ nhiều câu về Thụy Điển).
 - **Lệch miền:** văn Wikipedia mang tính bách khoa. Nhãn UIT-HWDB là văn báo chí và có câu hội thoại. Câu ngôi thứ nhất như "tôi mua bàn ghế" rất hiếm trong kho.
 - Còn sót một ít tên riêng nước ngoài trong câu, vì mỗi câu được phép có tới 10 % từ không phải tiếng Việt.
 - **Kiểu bỏ dấu:** kho dùng kiểu cũ ("hòa"). Nếu nhãn UIT-HWDB dùng kiểu mới ("hoà"), bộ sửa sẽ bị tính sai ở những âm tiết đó. `corrector_04_real_ocr.ipynb` đo tỉ lệ này trên val.
