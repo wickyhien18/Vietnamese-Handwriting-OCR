@@ -58,7 +58,7 @@ UIT-HWDB and writes the one with the lowest CER (every suggestion accepted, tau 
 `default_level.json` in the model folder, with the numbers it was chosen on. `correct()` uses that
 level. Until the file exists the default is `bigram`, because it was the best level on the corpus
 val in the first runs (syllable accuracy 95.8 % against 95.3 % for the tagger, mixed noise) and it
-needs no PyTorch. The choice is made on val only, never on test.
+needs no PyTorch. The choice is made on val only, never on test. On 22 Nov the choice was `tagger` (CER 13.72 % against 15.00 % for `bigram` and 17.85 % for `frequency`); note that all three are above the 12.27 % of no correction when every suggestion is accepted, so tau matters (`docs/corrector_model_card.md`).
 
 **Why val and not the corpus.** The corpus accuracy measures synthetic noise; the project question
 is about real OCR errors, so the default is chosen on the OCR val lines. Role C still chooses tau on
