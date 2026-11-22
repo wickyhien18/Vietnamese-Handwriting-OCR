@@ -1,6 +1,6 @@
 # Datasheet: kho văn bản tiếng Việt của vai B
 
-Kho này dùng để huấn luyện và đánh giá bộ sửa dấu (`src/corrector/`). Ô nào ghi **[điền sau khi chạy]** thì lấy số từ file được chỉ ra, sau khi chạy `notebooks/corrector_05_clean_corpus.ipynb`.
+Kho này dùng để huấn luyện và đánh giá bộ sửa dấu (`src/corrector/`). Số liệu lấy từ `outputs/corrector_corpus_report.json` và `data/corpus/stats.json`, do `notebooks/corrector_05_clean_corpus.ipynb` tạo ngày 22/11/2026.
 
 ## 1. Mục đích
 
@@ -42,7 +42,7 @@ Số của Hiển (39 và 44) và số của `corpus_overlap` (119 và 125) dùn
 
 Bản 1 có câu trùng vì cách chia cũ băm câu **nguyên văn**: hai câu chỉ khác dấu câu hoặc chữ hoa bị tách sang hai tập. Bản chính băm câu **đã chuẩn hóa**, nên không còn trường hợp này. Trùng 8-gram không bằng 0 vì các cụm từ thường gặp lặp lại tự nhiên giữa các câu khác nhau; nhóm không đặt mục tiêu bằng 0 cho số này.
 
-So với dòng val và test của UIT-HWDB (`check_text_overlap.py --corpus`): bản 1 không trùng nguyên dòng, mức "major" là 1,6 % (val) và 3,6 % (test), đều dưới ngưỡng 10 %, nên giữ nguyên. Bản chính: **[điền sau khi chạy]** (in ra ở bước 4 của notebook 05).
+So với dòng val và test của UIT-HWDB (`check_text_overlap.py --corpus`): bản 1 không trùng nguyên dòng, mức "major" là 1,6 % (val) và 3,6 % (test), đều dưới ngưỡng 10 %, nên giữ nguyên. Bản chính (cửa sổ 5 từ, 1.469.903 câu train): không dòng val hay test nào của UIT-HWDB xuất hiện nguyên văn trong kho (exact 0,0 %). "any" là 34,6 % (val, 621 dòng đủ dài) và 53,1 % (test, 192 dòng), tức là nhiều dòng có ít nhất một cụm 5 từ thường gặp. "major" là 1,4 % (val) và 2,1 % (test), dưới ngưỡng 10 %, nên giữ nguyên và ghi chú trong báo cáo.
 
 ## 5. Kích thước
 
