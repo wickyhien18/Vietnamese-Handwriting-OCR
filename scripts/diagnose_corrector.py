@@ -16,6 +16,16 @@ import glob
 import hashlib
 import json
 import os
+import sys
+
+# Tự tìm thư mục gốc repo (nơi có src/), để chạy được từ bất kỳ đâu, kể cả: python scripts/diagnose_corrector.py
+_here = os.path.dirname(os.path.abspath(__file__))
+for _root in (os.getcwd(), _here, os.path.dirname(_here)):
+    if os.path.isdir(os.path.join(_root, "src", "corrector")):
+        sys.path.insert(0, _root)
+        break
+else:
+    sys.exit("Không thấy thư mục src/corrector. Hãy chạy trong repo (ví dụ: cd /content/repo).")
 
 from src.corrector import api
 from src.corrector.ocr_adapt import aligned_syllables, evaluate_on_ocr, ocr_lines
