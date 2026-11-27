@@ -43,7 +43,7 @@ Mức mặc định được chọn trên 636 dòng OCR val của UIT-HWDB (CER 
 
 Chấm một lần trên `test.txt` của kho (5.000 câu, 97.041 âm tiết): `frequency` 73,17 %, `bigram` 95,15 %, `tagger` 91,52 %, khớp với các phần gập.
 
-Ghi chú: 5 lần của `frequency` và `bigram` là 5 phần gập theo khối liên tục (1.000.000 câu). 5 lần của `tagger` là 5 seed (0–4), mỗi seed 300.000 câu, 2 epoch, khoảng 6,3 phút một lần trên T4; mô hình đóng gói là seed 1, tốt nhất trên val. Lần chạy đầu (8/11) train tagger lâu hơn (600.000 câu, 3 epoch) và đạt 95,3 %. Tagger trong bảng thấp hơn bigram chủ yếu vì ngân sách huấn luyện nhỏ hơn.
+Ghi chú: 5 lần của `frequency` và `bigram` là 5 phần gập theo khối liên tục (1.000.000 câu). 5 lần của `tagger` là 5 seed (0–4), mỗi seed 300.000 câu, 2 epoch, khoảng 6,3 phút một lần trên T4; mô hình đóng gói là seed 1, tốt nhất trên val. Lần chạy đầu (8/11) train tagger lâu hơn (600.000 câu, 3 epoch) và đạt 95,3 %. Tagger trong bảng thấp hơn bigram; một nguyên nhân có thể là ngân sách huấn luyện nhỏ hơn, chưa chạy lại với 600.000 câu × 3 epoch trên cấu hình cuối nên chưa kiểm chứng. Tagger vẫn được chọn làm mặc định vì trên OCR val nó làm hỏng ít âm tiết đúng nhất (3,35 % so với 9,48 % của bigram).
 
 Lần chạy đầu (kho bản 1, một lần chạy, nhiễu trộn): không sửa 59,8 %, `frequency` 73,7 %, `bigram` 95,8 %, `tagger` 95,3 %.
 
@@ -67,8 +67,8 @@ Kết quả chính thức của đề (bảng sửa đúng / sửa hỏng, quét
 | Mức | T | ECE val kho: trước → sau | ECE OCR val: trước → sau |
 |---|---|---|---|
 | `frequency` | 0,989 | 0,0050 → 0,0047 | 0,229 → 0,232 |
-| `bigram` | 1,184 | 0,0089 → 0,0039 | 0,262 → 0,242 |
-| `tagger` | 1,045 | 0,0056 → 0,0023 | 0,261 → 0,257 |
+| `bigram` | 1,184 | 0,0089 → 0,0039 | 0,262 → 0,241 |
+| `tagger` | 1,045 | 0,0056 → 0,0023 | 0,260 → 0,257 |
 
 Trên kho văn bản, độ tin cậy đã khớp rất tốt. Trên OCR thật thì không: ECE khoảng 0,23 đến 0,26. Lý do chính là phần lớn âm tiết sai của OCR sai ở chữ cái nền. Bộ sửa không sửa được những âm tiết này nhưng vẫn rất tự tin về dấu của chúng, vì độ tin cậy chỉ đo "chọn đúng dấu trong các ứng viên", không đo "âm tiết đúng". Temperature scaling khớp trên nhiễu tổng hợp nên không sửa được độ lệch này. Tỉ lệ âm tiết có conf ≥ 0,95 trên OCR val: `frequency` 29,2 %, `bigram` 60,8 %, `tagger` 75,1 % (biểu đồ `outputs/corrector_conf_hist.png`).
 
@@ -78,11 +78,11 @@ Trên kho văn bản, độ tin cậy đã khớp rất tốt. Trên OCR thật 
 
 ## Giới hạn (bắt buộc đọc)
 
-1. **Trần lợi ích nhỏ.** Lỗi dấu chỉ chiếm khoảng 11 % lỗi OCR. Lỗi chữ cái nền chiếm 82,3 % và nằm ngoài phạm vi của bộ sửa. Một bộ sửa dấu hoàn hảo cũng chỉ giảm được khoảng 0,85 đến 1,38 điểm CER, nên rất có thể "không sửa" thắng ở bước quét τ. Nhóm đã chấp nhận đây là một kết quả âm tính hợp lệ.
+1. **Trần lợi ích nhỏ.** Lỗi dấu chỉ chiếm khoảng 11 % lỗi OCR. Lỗi chữ cái nền chiếm 82,3 % và nằm ngoài phạm vi của bộ sửa. Một bộ sửa dấu hoàn hảo cũng chỉ giảm được tối đa 1,38 điểm CER (đếm theo nhãn lỗi) hoặc 1,53 điểm (tính chính xác), tức CER từ 12,27 % xuống khoảng 10,75 %, nên rất có thể "không sửa" thắng ở bước quét τ. Nhóm đã chấp nhận đây là một kết quả âm tính hợp lệ.
 2. **Lệch miền.** Huấn luyện trên Wikipedia, nhưng dữ liệu UIT-HWDB là văn báo chí và có câu hội thoại. Ví dụ đã thấy: "Toi mua ban ghe moi" thành "Tối mùa bán ghế mới". Độ tin cậy của những âm tiết sai này thấp (0,49 và 0,54), nên ngưỡng τ có thể chặn chúng.
 3. **Độ tin cậy quá cao trên OCR thật.** ECE khoảng 0,25 trên OCR val, vì conf không tính đến lỗi chữ cái nền (xem trên). Nên chọn τ trên OCR val, không tin vào giá trị conf tuyệt đối.
 4. **Nhiễu tổng hợp khác nhiễu OCR.** OCR thật hiếm khi xóa dấu cả dòng, còn bộ sinh nhiễu làm vậy với 30 % câu. `corrector_04_real_ocr.ipynb` đo xác suất nhiễu thật trên val và tinh chỉnh tagger theo đó.
-5. **Chỉ chọn trong ứng viên.** Mỗi âm tiết có tối đa 8 dạng có dấu thường gặp nhất trong kho. Âm tiết lạ được giữ nguyên với độ tin cậy 1,0.
+5. **Chỉ chọn trong ứng viên.** Mỗi âm tiết có tối đa 8 dạng có dấu thường gặp nhất trong kho. Âm tiết lạ được giữ nguyên với độ tin cậy 1,0. Âm tiết chỉ có một ứng viên cũng luôn có độ tin cậy 1,0, kể cả khi bị đổi; ngoài ra softmax float32 của tagger tròn thành đúng 1,0 khi chênh logit lớn hơn khoảng 17.
 6. **Kiểu bỏ dấu.** Đầu ra luôn theo kiểu cũ ("hòa", "thủy").
 7. Mô hình bigram sau khi cắt tỉa (bỏ cặp chỉ gặp một lần) không còn là phân phối xác suất chuẩn, vì tổng nhỏ hơn 1 (xem `docs/corrector_proofs.md`, Mệnh đề 2b). Điều này không ảnh hưởng đến Viterbi.
 
